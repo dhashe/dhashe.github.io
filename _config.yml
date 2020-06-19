@@ -1,0 +1,21 @@
+title: David Hashe
+description: >-
+  Personal website and blog.
+baseurl: ""
+url: "http://dhashe.com"
+github_username: dhashe
+linkedin_username: dhashe
+
+profilepic: images/photo.jpg
+
+header_pages:
+  - projects.md
+  - resume.md
+
+google_analytics: UA-99628281-1
+
+# Build settings
+theme: minima
+plugins:
+  - jekyll-feed
+  - jekyll-redirect-from
