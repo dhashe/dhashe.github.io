@@ -8,13 +8,16 @@ These are the puzzlehunt puzzles that I have authored or co-authored so far:
 
 | Puzzle                                                                      | Hunt                                                       | Org            |
 |-----------------------------------------------------------------------------|------------------------------------------------------------|----------------|
-| [Word Wide Web][word-wide-web] [(sol)][word-wide-web-sol]                   | [Matt & Emma's Birthday Bash][teammate-hunt]               | Teammate       |
-| [DVD Collection][dvd-collection] [(sol)][dvd-collection-sol]                | [Matt & Emma's Birthday Bash][teammate-hunt]               | Teammate       |
+| [Beep Arcade][beep-arcade] [(sol)][beep-arcade-sol]                         | [Matt & Emma's Carnival Conundrum][teammate-hunt]          | Teammate       |
+| [Word Wide Web][word-wide-web] [(sol)][word-wide-web-sol]                   | [Matt & Emma's Birthday Bash][teammate-hunt-2020]          | Teammate       |
+| [DVD Collection][dvd-collection] [(sol)][dvd-collection-sol]                | [Matt & Emma's Birthday Bash][teammate-hunt-2020]          | Teammate       |
 | [Horizons][horizons] [(sol)][horizons-sol]                                  | [Castaway Hunt][castaway-hunt]                             | CMU Puzzlehunt |
 | [Ich Hasse Diagramme][ich-hasse-diagramme] [(sol)][ich-hasse-diagramme-sol] | [Anomaly Hunt][anomaly-hunt]                               | CMU Puzzlehunt |
 | [A Royal Mess][a-royal-mess] [(sol)][a-royal-mess-sol]                      | [CS Hunt][cs-hunt]                                         | CMU Puzzlehunt |
 | [The Cake is a Lie][the-cake-is-a-lie] [(sol)][the-cake-is-a-lie-sol]       | [Aperture Science Student Testing Initiative][portal-hunt] | CMU Puzzlehunt |
 
+[beep-arcade]: /files/puzzles/beep-arcade.html
+[beep-arcade-sol]: /files/puzzles/beep-arcade-sol.html
 [word-wide-web]: /files/puzzles/word-wide-web.pdf
 [word-wide-web-sol]: /files/puzzles/word-wide-web-sol.pdf
 [dvd-collection]: /files/puzzles/dvd-collection.pdf
@@ -29,6 +32,7 @@ These are the puzzlehunt puzzles that I have authored or co-authored so far:
 [the-cake-is-a-lie-sol]: /files/puzzles/the-cake-is-a-lie-sol.pdf
 
 [teammate-hunt]: https://teammatehunt.com
+[teammate-hunt-2020]: https://2020.teammatehunt.com
 [castaway-hunt]: https://puzzlehunt.club.cc.cmu.edu/hunt/14/
 [anomaly-hunt]: https://puzzlehunt.club.cc.cmu.edu/hunt/12/
 [cs-hunt]: https://puzzlehunt.club.cc.cmu.edu/hunt/10/

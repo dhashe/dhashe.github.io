@@ -1,0 +1,345 @@
+<h2 style="font-size: 36px">Beep Arcade</h2>
+<h4>Written by Herman Chau and David Hashe</h4>
+<h4>Answer: LION</h4>
+
+<p>
+  This puzzle takes the form of a mod of
+  <a href="https://mattmakesgames.itch.io/celeste-classic-2">
+    Celeste Classic 2
+  </a>
+  for the <a href="https://www.lexaloffle.com/pico-8.php">PICO-8</a> fantasy
+  console. In the main <a href="http://www.celestegame.com/">Celeste</a> game
+  the player has a directional <i>dash</i> ability that moves them
+  through space in one of eight directions at a constant speed, as well as a
+  standard <i>jump</i>. The series also features many optional
+  (straw)berries that can be collected by solving especially tricky
+  platforming challenges.
+</p>
+<p>
+  In this mod, we find ourselves in a space-themed environment with yellow
+  and blue stars instead of berries. Most of the world is initially blocked
+  off by heart gates. As we explore, we find items from Celeste that emit
+  repeating Morse code messages. We must then repeat the Morse code by
+  jumping (dot) and dashing (dash) in the right sequence in order to unlock
+  the heart gates. Together the messages spell out MORSE CLOUDS TO STARS,
+  which clues the next step.
+</p>
+<p>
+  Each star has exactly one shortest sequence of dashes and jumps, starting
+  from the cloud checkpoint, that will successfully collect it. The color of
+  the star (yellow or blue) doesn't matter for the puzzle; the difference is
+  that blue stars disappear and can't be collected if we dash. When a star
+  is collected, a numeric score from 1 to 13 thousand appears next to it.
+</p>
+<p>
+  Treating the solutions for the stars as Morse code letters and ordering by
+  the numeric score yields SKY ANIMAL FOUR.
+</p>
+<p>
+  Collecting every star isn't strictly necessary, but if we do collect all
+  13 stars then we are rewarded with lines connecting some of the stars.
+  Progress on stars is synced with the server and shared across the team.
+</p>
+<p>
+  We must then recognize that the stars form the constellation LEO. As an
+  additional clue, the game world is shaped exactly like the IAU definition
+  of LEO (constellations are officially defined as areas, not as star
+  patterns).
+</p>
+<p>
+  Since LEO is a constellation of a lion (SKY ANIMAL), the
+  answer is just <bold>LION</bold>.
+</p>
+
+<h3>Authors Notes</h3>
+<div>
+  <p>
+    <b>Herman:</b> I was recruited to help develop this puzzle after David
+    had a working prototype to help with some level design, art and
+    programming. I hope the challenges to collect all the stars managed to
+    feel puzzle-y and interesting on their own and that the speed modifier
+    made it sufficiently accessible to those who don't usually play
+    platformers.
+  </p>
+  <p>
+    I tried to fit in a number of references to Celeste. The solid blocks
+    have a parallax effect modeled after the dream blocks in Chapter 2. The
+    three Morse code objects referred to the computer in Chapter 1, the
+    intro car, and the bird.
+  </p>
+  <p>
+    Prior to working on this puzzle I had used PICO-8 for only one other
+    project so I learned a lot while working on this. From a technical
+    standpoint, I found it a fun challenge to optimize the dream block
+    effect for the game to run efficiently. It was also very cool to
+    discover that PICO-8 has a 128-byte array that is shared between the
+    system and in Javascript, which is what we made use of for syncing save
+    states across the entire team. In theory, it should have been possible
+    to even let you see exactly where all your teammates were in the game.
+  </p>
+  <p>
+    If you're interested in seeing what PICO-8 is capable of, here are some
+    other recommendations:
+  </p>
+  <ul>
+    <li>
+      <a href="https://tarkovsky.itch.io/picohot">PICOHOT</a>: A demake of
+      SUPERHOT, created by members of the original development team.
+    </li>
+    <li>
+      <a href="https://canarigames.itch.io/picodriller">Pico Driller</a>: A
+      demake of Mr. Driller.
+    </li>
+    <li>
+      <a href="https://johanpeitz.itch.io/picocad">picoCAD</a>: A piece of
+      incredibly impressive 3d modeling software.
+    </li>
+    <li>
+      <a href="https://twitter.com/lexaloffle/status/1052502760329961473">
+        tweetcarts
+      </a>
+      : Amazing tech demos that fit in a single Tweet
+    </li>
+  </ul>
+  <p>
+    <b>David:</b> I started this puzzle after learning that Celeste Classic
+    2 was written in
+    <a href="https://twitter.com/NoelFB/status/1353849211435929600">
+      three days
+    </a>
+    . I can now confirm that the Celeste devs must be very good at this
+    since it took us significantly longer.
+  </p>
+  <p>
+    I think the idea of doing Morse code with Celeste is a natural one; It
+    came to me soon after playing the game for the first time. Shaping the
+    map like a constellation and extracting that way came later, and I was
+    probably inspired by the similarity between "celeste" and "celestial".
+  </p>
+  <p>
+    Fortunately, Celeste Classic 2 was a great foundation to build the
+    puzzle on. Unfortunately, I still had to spend a lot of time with the
+    code replacing Lani's grapple with the original dash, introducing new
+    block types like one-way barriers and blue stars, and writing a build
+    system to pack the compressed map into the release cart, before I was
+    ready to write the actual content of the puzzle.
+  </p>
+  <p>
+    I was honestly pretty tired of the puzzle by that point, so I'm super
+    grateful to Herman for coming in and making some awesome star puzzles
+    and art, as well as writing the netcode and creating the heart gates and
+    audio messages as a solution for guiding solvers towards using Morse for
+    extraction. He definitely elevated the puzzle to a much better version
+    than I could've made on my own.
+  </p>
+  <p>
+    In the final puzzle, I wrote the star puzzles for the right and left
+    levels, and Herman wrote the star puzzles for the top and bottom levels.
+  </p>
+  <p>Some other PICO-8 games I've enjoyed:</p>
+  <ul>
+    <li>
+      <a href="https://powersaurus.itch.io/cab-ride">Cab Ride</a>: Drive a
+      train, forever, through a dreamlike land.
+    </li>
+    <li>
+      <a href="https://www.lexaloffle.com/bbs/?tid=42270">PICOWARE</a>: A
+      WarioWare-style collection of microgames.
+    </li>
+    <li>
+      <a href="https://www.lexaloffle.com/bbs/?tid=37280">Pico de Pon</a>:
+      The classic puzzle game known variously as Panel de Pon, Pokemon
+      Puzzle League, and Tetris Attack.
+    </li>
+  </ul>
+  <p>
+    And of course both
+    <a href="https://mattmakesgames.itch.io/celesteclassic">
+      Celeste Classic
+    </a>
+    and
+    <a href="https://mattmakesgames.itch.io/celeste-classic-2">
+      Celeste Classic 2
+    </a>
+    !
+  </p>
+  <p>
+    Side note on constellations: The game map really is as-close-as-possible
+    to the dimensions of the real Leo constellation. This ended up taking
+    some research. It turns out that constellation boundaries are defined
+    relative to the Earth's position in 1875, so they are only nice even
+    quantities using the B1875.0 celestial coordinate system. But modern
+    astronomical software like Stellarium doesn't even include that system
+    as an option! I eventually found a
+    <a href="http://pbarbier.com/constellations/boundaries.html">
+      blog post
+    </a>
+    with a cleaned dataset of constellation boundaries relative to B1875.0,
+    transcribed from the book they were originally published in. I then
+    mapped those coordinates onto the 128x128 PICO-8 map.
+  </p>
+</div>
+
+<h3>Appendix</h3>
+<div>
+  <h4>Completed Star Map</h4>
+  <div class="center">
+    <img src=/files/puzzles/beep-arcade/assets/map.png width={512} height={512} />
+  </div>
+
+  <h4>How To Collect Each Star</h4>
+
+  <table class="bordered center">
+    <tr>
+      <th>Score</th>
+      <th>Video</th>
+      <th>Letter</th>
+      <th>Morse</th>
+    </tr>
+    <tr>
+      <td>1000</td>
+      <td>
+        <img class="stargif" src="/files/puzzles/beep-arcade/assets/1000.webp" />
+      </td>
+      <td>S</td>
+      <td class="morse">...</td>
+    </tr>
+    <tr>
+      <td>2000</td>
+      <td>
+        <img class="stargif" src="/files/puzzles/beep-arcade/assets/2000.webp" />
+      </td>
+      <td>K</td>
+      <td class="morse">-.-</td>
+    </tr>
+    <tr>
+      <td>3000</td>
+      <td>
+        <img class="stargif" src="/files/puzzles/beep-arcade/assets/3000.webp" />
+      </td>
+      <td>Y</td>
+      <td class="morse">-.--</td>
+    </tr>
+    <tr>
+      <td>4000</td>
+      <td>
+        <img class="stargif" src="/files/puzzles/beep-arcade/assets/4000.webp" />
+      </td>
+      <td>A</td>
+      <td class="morse">.-</td>
+    </tr>
+    <tr>
+      <td>5000</td>
+      <td>
+        <img class="stargif" src="/files/puzzles/beep-arcade/assets/5000.webp" />
+      </td>
+      <td>N</td>
+      <td class="morse">-.</td>
+    </tr>
+    <tr>
+      <td>6000</td>
+      <td>
+        <img class="stargif" src="/files/puzzles/beep-arcade/assets/6000.webp" />
+      </td>
+      <td>I</td>
+      <td class="morse">..</td>
+    </tr>
+    <tr>
+      <td>7000</td>
+      <td>
+        <img class="stargif" src="/files/puzzles/beep-arcade/assets/7000.webp" />
+      </td>
+      <td>M</td>
+      <td class="morse">--</td>
+    </tr>
+    <tr>
+      <td>8000</td>
+      <td>
+        <img class="stargif" src="/files/puzzles/beep-arcade/assets/8000.webp" />
+      </td>
+      <td>A</td>
+      <td class="morse">.-</td>
+    </tr>
+    <tr>
+      <td>9000</td>
+      <td>
+        <img class="stargif" src="/files/puzzles/beep-arcade/assets/9000.webp" />
+      </td>
+      <td>L</td>
+      <td class="morse">.-..</td>
+    </tr>
+    <tr>
+      <td>10000</td>
+      <td>
+        <img class="stargif" src="/files/puzzles/beep-arcade/assets/10000.webp" />
+      </td>
+      <td>F</td>
+      <td class="morse">..-.</td>
+    </tr>
+    <tr>
+      <td>11000</td>
+      <td>
+        <img class="stargif" src="/files/puzzles/beep-arcade/assets/11000.webp" />
+      </td>
+      <td>O</td>
+      <td class="morse">---</td>
+    </tr>
+    <tr>
+      <td>12000</td>
+      <td>
+        <img class="stargif" src="/files/puzzles/beep-arcade/assets/12000.webp" />
+      </td>
+      <td>U</td>
+      <td class="morse">..-</td>
+    </tr>
+    <tr>
+      <td>13000</td>
+      <td>
+        <img class="stargif" src="/files/puzzles/beep-arcade/assets/13000.webp" />
+      </td>
+      <td>R</td>
+      <td class="morse">.-.</td>
+    </tr>
+  </table>
+</div>
+
+<style type="text/css">
+    .stargif {
+        align: center;
+        margin: auto;
+        width: 250px;
+    }
+    .morse {
+        font-size: 48px;
+        font-weight: bold;
+        font-family: monospace;
+    }
+
+    body {
+        margin: 40px auto;
+        max-width: 1000px;
+        line-height: 1.6;
+        font-size: 18px;
+        color: #444;
+        padding:0 10px;
+    }
+
+    h1, h2, h3, h4, h5 {
+        line-height: 1.2;
+        text-align: center;
+    }
+
+    table {
+        table-layout: fixed;
+        border-collapse: collapse;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    table.center td {
+        text-align: center;
+    }
+    table.bordered td, table.bordered th {
+        border: 1px solid #000;
+        padding: 8px 20px;
+    }
+</style>
