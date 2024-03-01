@@ -10,7 +10,6 @@ profilepic: files/photo.jpg
 
 header_pages:
   - projects.md
-  - resume.md
 
 google_analytics: UA-99628281-1
 
