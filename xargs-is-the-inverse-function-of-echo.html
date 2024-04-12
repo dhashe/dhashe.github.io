@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="generator" content="Pelican" />
+        <title>xargs is the inverse function of echo</title>
+        <link rel="stylesheet" href="https://dhashe.com/theme/css/main.css" />
+        <link href="https://dhashe.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="David Hashe | Personal website and blog Atom Feed" />
+        <meta name="description" content="code { white-space : pre-wrap !important; } xargs is a particularly confusing unix command. I want to share my trick for understanding how it..." />
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="https://dhashe.com/">David Hashe | Personal website and blog</a></h1>
+                <nav><ul>
+                    <li><a href="https://dhashe.com/pages/about-me.html">About Me</a></li>
+                    <li><a href="https://dhashe.com/pages/puzzles.html">Puzzles</a></li>
+                    <li class="active"><a href="https://dhashe.com/category/blog.html">Blog</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="https://dhashe.com/xargs-is-the-inverse-function-of-echo.html" rel="bookmark"
+           title="Permalink to xargs is the inverse function of echo">xargs is the inverse function of echo</a></h1>
+    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2024-04-12T09:00:00-04:00">
+                Published: Fri 12 April 2024
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="https://dhashe.com/author/david-hashe.html">David Hashe</a>
+        </address>
+<p>In <a href="https://dhashe.com/category/blog.html">Blog</a>.</p>
+
+</footer><!-- /.post-info -->      <style>
+code {
+  white-space : pre-wrap !important;
+}
+</style>
+
+<p><code>xargs</code> is a particularly confusing unix command. I want to share my trick for understanding how it works.</p>
+<p>Let's look at the abbreviated <a href="https://tldr.sh/">tldr</a> output for xargs:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>tldr<span class="w"> </span>xargs
+xargs
+
+<span class="w"> </span>-<span class="w"> </span>Run<span class="w"> </span>a<span class="w"> </span><span class="nb">command</span><span class="w"> </span>using<span class="w"> </span>the<span class="w"> </span>input<span class="w"> </span>data<span class="w"> </span>as<span class="w"> </span>arguments:
+<span class="w">   </span><span class="o">{{</span>arguments_source<span class="o">}}</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span><span class="o">{{</span>command<span class="o">}}</span>
+</code></pre></div>
+
+<p>So, for example, if you had a file named <code>files_to_delete</code> with the contents below:</p>
+<div class="highlight"><pre><span></span><code>obsolete_note.md
+yucky_recipe.pdf
+cringe_tiktok.mov
+</code></pre></div>
+
+<p>Then you could run the following line to delete each of the files <sup id="fnref:cat_abuse"><a class="footnote-ref" href="#fn:cat_abuse">1</a></sup>:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>cat<span class="w"> </span>files_to_delete<span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>rm
+</code></pre></div>
+
+<p>Which reduces to the following command:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>rm<span class="w"> </span>obsolete_note.md<span class="w"> </span>yucky_recipe.pdf<span class="w"> </span>cringe_tiktok.mov
+</code></pre></div>
+
+<p>This is a general pattern that shows up in a lot of contexts when writing shell pipelines. And as you might expect, this is because xargs implements a necessary and fundamental operation in shell scripting: converting input data from stdin to cmdline args.</p>
+<p>For context, there are two separate and equally important ways to pass input to a unix program: stdin and cmdline args <sup id="fnref:env"><a class="footnote-ref" href="#fn:env">2</a></sup>. Sometimes, a program's cmdline args determine what it expects on stdin. And in general, programs can have quite complex behavior with respect to their input. But the basic differences between the two input sources are:</p>
+<ul>
+<li>stdin is an infinite text stream for ongoing input</li>
+<li>cmdline args is a fixed text array of start-of-program input</li>
+</ul>
+<p>Here's a generic example of how to pass input to a command within a pipeline <sup id="fnref:echo_heredocs"><a class="footnote-ref" href="#fn:echo_heredocs">3</a></sup>:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="nv">$STDIN_DATA</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">$CMD</span><span class="w"> </span><span class="nv">$ARGS_DATA</span><span class="w"> </span><span class="c1"># $CMD may need to be given input via $STDIN_DATA and/or $ARGS_DATA</span>
+</code></pre></div>
+
+<p>For most programs, it is obvious what the cmdline args are, because they are written out in the pipeline. The tricky part of xargs is that it dynamically constructs the cmdline args for the program it calls based on its own stdin.</p>
+<p>In our earlier example, xargs dynamically constructed the call <code>rm obsolete_note.md yucky_recipe.pdf cringe_tiktok.mov</code> based on its stdin. We couldn't tell what the arguments to rm would be based on the original pipeline text <code>cat files_to_delete | xargs rm</code>.</p>
+<p>Interestingly, the echo command implements exactly the opposite operation to xargs in shell scripting: converting input data from cmdline args to stdin:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>tldr<span class="w"> </span><span class="nb">echo</span>
+<span class="nb">echo</span>
+
+<span class="w"> </span>-<span class="w"> </span>Print<span class="w"> </span>a<span class="w"> </span>text<span class="w"> </span>message.<span class="w"> </span>Note:<span class="w"> </span>quotes<span class="w"> </span>are<span class="w"> </span>optional:
+<span class="w">   </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;{{Hello World}}&quot;</span>
+</code></pre></div>
+
+<p>Both xargs and echo show up frequently in shell pipelines. I think that echo is less confusing because the mental model of shell pipelines is of self-contained commands passing their output forward to the next command, and echo is just a command that directly generates output from cmdline args. For example:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="nv">$ARGS</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>command_plus_args<span class="w"> </span><span class="p">|</span><span class="w"> </span>command_plus_args<span class="w"> </span><span class="c1"># echo naturally fits into the pipeline mental model as a source of data over stdin</span>
+$<span class="w"> </span>command_plus_args<span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span><span class="nv">$CMD</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>command_plus_args<span class="w"> </span><span class="c1"># xargs does something weird and unexpected by dynamically constructing a command in the middle of the pipeline</span>
+</code></pre></div>
+
+<p>See how xargs breaks the mental model by constructing a command dynamically at runtime based on the previous link in the chain, which is counter-intuitive.</p>
+<p>But this is also why xargs is so powerful. Shell pipelines only pass data through stdin/stdout, but many unix programs require input via cmdline args, and xargs makes it possible to use those programs within a pipeline.</p>
+<p>And so now we can state the trick for understanding xargs, which was also the title of this post: xargs is the inverse function of echo.</p>
+<ul>
+<li><code>echo</code> is a function that maps cmdline args to stdin</li>
+<li><code>xargs</code> is a function that maps stdin to cmdline args</li>
+<li><code>xargs echo</code> is an identity function because <code>echo $DATA | xargs echo | $CMD</code> is equivalent to <code>echo $DATA | $CMD</code></li>
+<li><code>echo $DATA | xargs $CMD</code> is another identity function because it is equivalent to <code>$CMD $DATA</code></li>
+</ul>
+<p>In fact, without any arguments, <code>xargs</code> defaults to behaving like <code>xargs echo</code> because defaulting to an identity function is a sensible thing to do.</p>
+<p>So, in order to remember what xargs does, just think about what echo does, and remember that xargs performs the inverse.</p>
+<p><em>Thank you to <a href="https://eliotwrobson.github.io/#about">Eliot Robson</a> for providing feedback on drafts of this post. All mistakes are my own.</em></p>
+<div class="footnote">
+<hr>
+<ol>
+<li id="fn:cat_abuse">
+<p>I am aware that this is a <a href="https://porkmail.org/era/unix/award">useless use of cat</a>.&#160;<a class="footnote-backref" href="#fnref:cat_abuse" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:env">
+<p>There is also the <a href="https://en.wikipedia.org/wiki/Environment_variable">environment</a>, but it is uncommon to explicitly use that in shell pipelines.&#160;<a class="footnote-backref" href="#fnref:env" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+<li id="fn:echo_heredocs">
+<p>Note that <code>$STDIN_DATA</code> is the cmdline args for <code>echo</code> but the stdin for <code>$CMD</code>. Also note that we could have replaced echo with a <a href="https://en.wikipedia.org/wiki/Here_document">heredoc</a>.&#160;<a class="footnote-backref" href="#fnref:echo_heredocs" title="Jump back to footnote 3 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div>
+    </div><!-- /.entry-content -->
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+                            <li><a href="https://dhashe.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom feed</a></li>
+
+                            <li><a href="https://github.com/dhashe">github</a></li>
+                            <li><a href="https://www.linkedin.com/in/dhashe">linkedin</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>

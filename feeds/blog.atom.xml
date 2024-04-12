@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>David Hashe | Personal website and blog - Blog</title><link href="https://dhashe.com/" rel="alternate"></link><link href="https://dhashe.com/feeds/blog.atom.xml" rel="self"></link><id>https://dhashe.com/</id><updated>2024-04-12T09:00:00-04:00</updated><entry><title>xargs is the inverse function of echo</title><link href="https://dhashe.com/xargs-is-the-inverse-function-of-echo.html" rel="alternate"></link><published>2024-04-12T09:00:00-04:00</published><updated>2024-04-12T09:00:00-04:00</updated><author><name>David Hashe</name></author><id>tag:dhashe.com,2024-04-12:/xargs-is-the-inverse-function-of-echo.html</id><summary type="html">&lt;style&gt;
+code {
+  white-space : pre-wrap !important;
+}
+&lt;/style&gt;
+
+&lt;p&gt;&lt;code&gt;xargs&lt;/code&gt; is a particularly confusing unix command. I want to share my trick for understanding how it works.&lt;/p&gt;
+&lt;p&gt;Let's look at the abbreviated &lt;a href="https://tldr.sh/"&gt;tldr&lt;/a&gt; output for xargs:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$&lt;span class="w"&gt; &lt;/span&gt;tldr&lt;span class="w"&gt; &lt;/span&gt;xargs
+xargs
+
+&lt;span class="w"&gt; &lt;/span&gt;-&lt;span class="w"&gt; &lt;/span&gt;Run&lt;span class="w"&gt; &lt;/span&gt;a&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;command&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;using&lt;span class="w"&gt; &lt;/span&gt;the&lt;span class="w"&gt; &lt;/span&gt;input&lt;span class="w"&gt; &lt;/span&gt;data&lt;span class="w"&gt; &lt;/span&gt;as&lt;span class="w"&gt; &lt;/span&gt;arguments:
+&lt;span class="w"&gt;   &lt;/span&gt;&lt;span class="o"&gt;{{&lt;/span&gt;arguments_source&lt;span class="o"&gt;}}&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;xargs&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;{{&lt;/span&gt;command&lt;span class="o"&gt;}}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;So, for example, if …&lt;/p&gt;</summary><content type="html">&lt;style&gt;
+code {
+  white-space : pre-wrap !important;
+}
+&lt;/style&gt;
+
+&lt;p&gt;&lt;code&gt;xargs&lt;/code&gt; is a particularly confusing unix command. I want to share my trick for understanding how it works.&lt;/p&gt;
+&lt;p&gt;Let's look at the abbreviated &lt;a href="https://tldr.sh/"&gt;tldr&lt;/a&gt; output for xargs:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$&lt;span class="w"&gt; &lt;/span&gt;tldr&lt;span class="w"&gt; &lt;/span&gt;xargs
+xargs
+
+&lt;span class="w"&gt; &lt;/span&gt;-&lt;span class="w"&gt; &lt;/span&gt;Run&lt;span class="w"&gt; &lt;/span&gt;a&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;command&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;using&lt;span class="w"&gt; &lt;/span&gt;the&lt;span class="w"&gt; &lt;/span&gt;input&lt;span class="w"&gt; &lt;/span&gt;data&lt;span class="w"&gt; &lt;/span&gt;as&lt;span class="w"&gt; &lt;/span&gt;arguments:
+&lt;span class="w"&gt;   &lt;/span&gt;&lt;span class="o"&gt;{{&lt;/span&gt;arguments_source&lt;span class="o"&gt;}}&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;xargs&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;{{&lt;/span&gt;command&lt;span class="o"&gt;}}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;So, for example, if you had a file named &lt;code&gt;files_to_delete&lt;/code&gt; with the contents below:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;obsolete_note.md
+yucky_recipe.pdf
+cringe_tiktok.mov
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Then you could run the following line to delete each of the files &lt;sup id="fnref:cat_abuse"&gt;&lt;a class="footnote-ref" href="#fn:cat_abuse"&gt;1&lt;/a&gt;&lt;/sup&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$&lt;span class="w"&gt; &lt;/span&gt;cat&lt;span class="w"&gt; &lt;/span&gt;files_to_delete&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;xargs&lt;span class="w"&gt; &lt;/span&gt;rm
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Which reduces to the following command:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$&lt;span class="w"&gt; &lt;/span&gt;rm&lt;span class="w"&gt; &lt;/span&gt;obsolete_note.md&lt;span class="w"&gt; &lt;/span&gt;yucky_recipe.pdf&lt;span class="w"&gt; &lt;/span&gt;cringe_tiktok.mov
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;This is a general pattern that shows up in a lot of contexts when writing shell pipelines. And as you might expect, this is because xargs implements a necessary and fundamental operation in shell scripting: converting input data from stdin to cmdline args.&lt;/p&gt;
+&lt;p&gt;For context, there are two separate and equally important ways to pass input to a unix program: stdin and cmdline args &lt;sup id="fnref:env"&gt;&lt;a class="footnote-ref" href="#fn:env"&gt;2&lt;/a&gt;&lt;/sup&gt;. Sometimes, a program's cmdline args determine what it expects on stdin. And in general, programs can have quite complex behavior with respect to their input. But the basic differences between the two input sources are:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;stdin is an infinite text stream for ongoing input&lt;/li&gt;
+&lt;li&gt;cmdline args is a fixed text array of start-of-program input&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Here's a generic example of how to pass input to a command within a pipeline &lt;sup id="fnref:echo_heredocs"&gt;&lt;a class="footnote-ref" href="#fn:echo_heredocs"&gt;3&lt;/a&gt;&lt;/sup&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;echo&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;$STDIN_DATA&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;$CMD&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;$ARGS_DATA&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;# $CMD may need to be given input via $STDIN_DATA and/or $ARGS_DATA&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;For most programs, it is obvious what the cmdline args are, because they are written out in the pipeline. The tricky part of xargs is that it dynamically constructs the cmdline args for the program it calls based on its own stdin.&lt;/p&gt;
+&lt;p&gt;In our earlier example, xargs dynamically constructed the call &lt;code&gt;rm obsolete_note.md yucky_recipe.pdf cringe_tiktok.mov&lt;/code&gt; based on its stdin. We couldn't tell what the arguments to rm would be based on the original pipeline text &lt;code&gt;cat files_to_delete | xargs rm&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Interestingly, the echo command implements exactly the opposite operation to xargs in shell scripting: converting input data from cmdline args to stdin:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$&lt;span class="w"&gt; &lt;/span&gt;tldr&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;echo&lt;/span&gt;
+&lt;span class="nb"&gt;echo&lt;/span&gt;
+
+&lt;span class="w"&gt; &lt;/span&gt;-&lt;span class="w"&gt; &lt;/span&gt;Print&lt;span class="w"&gt; &lt;/span&gt;a&lt;span class="w"&gt; &lt;/span&gt;text&lt;span class="w"&gt; &lt;/span&gt;message.&lt;span class="w"&gt; &lt;/span&gt;Note:&lt;span class="w"&gt; &lt;/span&gt;quotes&lt;span class="w"&gt; &lt;/span&gt;are&lt;span class="w"&gt; &lt;/span&gt;optional:
+&lt;span class="w"&gt;   &lt;/span&gt;&lt;span class="nb"&gt;echo&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;{{Hello World}}&amp;quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Both xargs and echo show up frequently in shell pipelines. I think that echo is less confusing because the mental model of shell pipelines is of self-contained commands passing their output forward to the next command, and echo is just a command that directly generates output from cmdline args. For example:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;echo&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;$ARGS&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;command_plus_args&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;command_plus_args&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;# echo naturally fits into the pipeline mental model as a source of data over stdin&lt;/span&gt;
+$&lt;span class="w"&gt; &lt;/span&gt;command_plus_args&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;xargs&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;$CMD&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;command_plus_args&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;# xargs does something weird and unexpected by dynamically constructing a command in the middle of the pipeline&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;See how xargs breaks the mental model by constructing a command dynamically at runtime based on the previous link in the chain, which is counter-intuitive.&lt;/p&gt;
+&lt;p&gt;But this is also why xargs is so powerful. Shell pipelines only pass data through stdin/stdout, but many unix programs require input via cmdline args, and xargs makes it possible to use those programs within a pipeline.&lt;/p&gt;
+&lt;p&gt;And so now we can state the trick for understanding xargs, which was also the title of this post: xargs is the inverse function of echo.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;echo&lt;/code&gt; is a function that maps cmdline args to stdin&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;xargs&lt;/code&gt; is a function that maps stdin to cmdline args&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;xargs echo&lt;/code&gt; is an identity function because &lt;code&gt;echo $DATA | xargs echo | $CMD&lt;/code&gt; is equivalent to &lt;code&gt;echo $DATA | $CMD&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;echo $DATA | xargs $CMD&lt;/code&gt; is another identity function because it is equivalent to &lt;code&gt;$CMD $DATA&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;In fact, without any arguments, &lt;code&gt;xargs&lt;/code&gt; defaults to behaving like &lt;code&gt;xargs echo&lt;/code&gt; because defaulting to an identity function is a sensible thing to do.&lt;/p&gt;
+&lt;p&gt;So, in order to remember what xargs does, just think about what echo does, and remember that xargs performs the inverse.&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Thank you to &lt;a href="https://eliotwrobson.github.io/#about"&gt;Eliot Robson&lt;/a&gt; for providing feedback on drafts of this post. All mistakes are my own.&lt;/em&gt;&lt;/p&gt;
+&lt;div class="footnote"&gt;
+&lt;hr&gt;
+&lt;ol&gt;
+&lt;li id="fn:cat_abuse"&gt;
+&lt;p&gt;I am aware that this is a &lt;a href="https://porkmail.org/era/unix/award"&gt;useless use of cat&lt;/a&gt;.&amp;#160;&lt;a class="footnote-backref" href="#fnref:cat_abuse" title="Jump back to footnote 1 in the text"&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li id="fn:env"&gt;
+&lt;p&gt;There is also the &lt;a href="https://en.wikipedia.org/wiki/Environment_variable"&gt;environment&lt;/a&gt;, but it is uncommon to explicitly use that in shell pipelines.&amp;#160;&lt;a class="footnote-backref" href="#fnref:env" title="Jump back to footnote 2 in the text"&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li id="fn:echo_heredocs"&gt;
+&lt;p&gt;Note that &lt;code&gt;$STDIN_DATA&lt;/code&gt; is the cmdline args for &lt;code&gt;echo&lt;/code&gt; but the stdin for &lt;code&gt;$CMD&lt;/code&gt;. Also note that we could have replaced echo with a &lt;a href="https://en.wikipedia.org/wiki/Here_document"&gt;heredoc&lt;/a&gt;.&amp;#160;&lt;a class="footnote-backref" href="#fnref:echo_heredocs" title="Jump back to footnote 3 in the text"&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;</content><category term="Blog"></category></entry></feed>
