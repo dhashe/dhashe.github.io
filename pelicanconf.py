@@ -5,7 +5,7 @@ SITEURL = ""
 PATH = "content"
 PAGE_PATHS = ["pages"]
 ARTICLE_PATHS = ["articles"]
-STATIC_PATHS = ["images", "files"]
+STATIC_PATHS = ["images", "files", "extra/CNAME"]
 
 TIMEZONE = "America/New_York"
 
