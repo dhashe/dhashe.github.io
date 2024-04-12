@@ -1,8 +1,4 @@
----
-layout: page
-title: Puzzles
-permalink: /projects/puzzles
----
+Title: Puzzles
 
 These are the puzzlehunt puzzles that I have authored or co-authored so far:
 
