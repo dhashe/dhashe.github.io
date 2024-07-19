@@ -38,6 +38,9 @@ MARKDOWN = {
         "markdown.extensions.extra": {},
         "markdown.extensions.meta": {},
         "markdown.extensions.md_in_html": {},
+        "markdown.extensions.toc": {
+            "anchorlink": True,
+        },
     },
     "output_format": "html5",
 }
