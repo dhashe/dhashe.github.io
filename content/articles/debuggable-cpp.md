@@ -155,7 +155,10 @@ Set your binary to build for a very old x86_64 machine.
 ### How
 Add the following to your `CFLAGS` and `CXXFLAGS`: `-march=x86-64`
 ### Why
-This may be important if you want to do reversible debugging. Reversible debugging requires a detailed model of the hardware ISA. Historically, reverse debuggers have not supported all x86_64 instructions (e.g. AVX). `x86-64` is the baseline 64-bit x86 architecture without extensions, which is likely to be well-supported by all tools.
+This may be important if you want to do reversible debugging [^rev_fix]. Reversible debugging requires a detailed model of the hardware ISA. Historically, reverse debuggers have not supported all x86_64 instructions (e.g. AVX). `x86-64` is the baseline 64-bit x86 architecture without extensions, which is likely to be well-supported by all tools.
+
+[^rev_fix]: I needed this for gdb's builtin reversible debugging. HN user `mark_undoio` says [here](https://news.ycombinator.com/item?id=41101564) that this is not usually necessary with [rr](https://rr-project.org/) or [Undo](https://undo.io/), which are more powerful, much faster, and have more complete ISA support. I would recommend them over gdb's builtin support.
+
 ### Ref
 - [Gentoo guide to exactly the opposite](https://wiki.gentoo.org/wiki/GCC_optimization#-march)
 - [Difference between mtune and march](https://stackoverflow.com/a/10559360)
@@ -172,13 +175,25 @@ This is especially annoying if you statically link against your libc, because ma
 - [ld manpage](https://linux.die.net/man/1/ld#:~:text=reporting%20unresolved%20symbols.-,%2D%2Dwhole%2Darchive,-For%20each%20archive)
 # Semi-Specific Compilation and Source Changes
 ## Partition your TUs into "debuggable" and "fast"
-Partition your TUs into "debuggable" and "fast", and compile the "debuggable" TUs with `--gdb3 -O0` and the  "fast" TU's with `--gdb3 -O3`.
+Partition your TUs into "debuggable" and "fast", and compile the "debuggable" TUs with `--ggdb3 -O0` and the  "fast" TU's with `--ggdb3 -O3` [^gdb_fix].
+
+[^gdb_fix]: Thanks to HN user `dataflow` for catching my typos [here](https://news.ycombinator.com/item?id=41105618).
+
 ### How
 You need to build different sets of TUs with different `CFLAGS` and `CXXFLAGS`.
 
 This is unfortunately quite specific to your build system, and I am not aware of any that have this as a built-in feature. My recommendation is to hack up your build system so that you can specify a set of "debuggable" TUs, and then either convince your coworkers to let you merge the change or maintain it for yourself on a private branch.
 
-Alternatively, you may be able to bypass the build system entirely. If your codebase has a compile_commands.json so that clangd can provide accurate intellisense, then you can re-purpose it to help you. The compilation database will have compiler commands for every TU in your project. You want to write a script that 1) runs a normal optimized build of your project, 2) grabs the compiler commands for your "debuggable" TUs, re-writes them with `--gdb3 -O0` flags, and runs them, and 3) re-runs the linker command to relink the executable with the new debuggable object files.
+Alternatively, you may be able to bypass the build system entirely. If your codebase has a compile_commands.json so that clangd can provide accurate intellisense, then you can re-purpose it to help you. The compilation database will have compiler commands for every TU in your project. You want to write a script that 1) runs a normal optimized build of your project, 2) grabs the compiler commands for your "debuggable" TUs, re-writes them with `--ggdb3 -O0` flags, and runs them, and 3) re-runs the linker command to relink the executable with the new debuggable object files.
+
+Alternatively, gcc, clang, and msvc each provide pragmas that control optimizations for individual functions or ranges of functions: [^pragma_fix]
+
+[^pragma_fix]: Thanks to HN users `forrestthewoods`, `o11c`, and `bialpio` for pointing out [here](https://news.ycombinator.com/item?id=41101725) that these pragmas exist.
+
+For gcc, add `#pragma GCC optimize ("O0")` to the top of your "debuggable" source files, and compile the entire project with `--ggdb3 -O3`.
+
+For clang, add `#pragma clang optimize off` to the top of your "debuggable" source files, and compile the entire project with `--ggdb3 -O3`.
+
 ### Why
 C++ is often used for code that has to be fast. Unoptimized C++ code can be very slow, especially in large projects. Note that when debugging you often have a pretty good idea of roughly where the bug is going to be, even if you don't know exactly what's going wrong. And the ABI of the generated code doesn't depend on the optimization level, so it is possible to link together optimized and unoptimized TUs. So then, a reasonable strategy is to identify the TUs that have to be debugged, and then only compile those without optimizations, and compile the rest of the project with optimizations.
 
@@ -189,6 +204,9 @@ Also note that sometimes a bug will only appear in optimized code. Usually this 
 Note that g++ recommends using `-Og` instead of `-O0` for the best debugging experience. But this will still inline functions and optimize out local variables, so I don't recommend using it. `-Og` is probably a decent choice if you have to compile your entire program at a single optimization level, but we can do even better with our split strategy.
 ### Ref
 - [GCC manual on optimization levels](https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html)
+- [GCC manual on optimization pragmas](https://gcc.gnu.org/onlinedocs/gcc/Function-Specific-Option-Pragmas.html)
+- [Clang manual on optimization pragmas](https://clang.llvm.org/docs/LanguageExtensions.html#extensions-for-selectively-disabling-optimization)
+- [MSVC manual on optimization pragmas](https://learn.microsoft.com/en-us/cpp/preprocessor/optimize?view=msvc-170)
 ## Explicitly instantiate important template classes
 Explicitly instantiate every template class specialization that you want to debug.
 ### How
@@ -231,14 +249,14 @@ Note that `g++ -E` also evaluates all ifdefs, and you can set the values for def
 - [GCC options controlling the preprocessor](https://gcc.gnu.org/onlinedocs/gcc/Preprocessor-Options.html)
 ## Set up fast conditional breakpoints using the x86 INT3 trick
 Modify the source to insert native-speed conditional breakpoints that can be turned on or off from inside the debugger.
-### How
+### How 
 ```
 volatile bool breakpoint_1 = false;
 ...
 void func() {
 ...
     if (breakpoint_1 && (x_id == 153827)) {
-        __asm("int $3");
+        __asm("int3\n\tnop");
     }
 ...
 }
@@ -248,7 +266,12 @@ void func() {
 (gdb) p breakpoint_1 = true
 ```
 
-Make sure that `breakpoint_1` has external linkage (e.g. isn't static and isn't inside of an anonymous namespace) so that you can easily enable/disable it regardless of where your debuggger is sitting in the stack.
+The `nop` instruction after the `int3` helps gdb understand the context of where the breakpoint fired [^int_fix] .
+
+[^int_fix]: Thanks to HN user `amluto` for suggesting the `nop` instruction [here](https://news.ycombinator.com/item?id=41104749).
+
+Make sure that `breakpoint_1` has external linkage (e.g. isn't static and isn't inside of an anonymous namespace) so that you can easily enable/disable it regardless of where your debugger is sitting in the stack.
+
 ### Why
 If you create a conditional breakpoint from inside of gdb, then it will trap on every occurrence, evaluate your break condition, and continue if the break condition is not met. This can be very slow. gdb does it this way because it only requires overwriting a single byte of the binary, which it knows how to do safely.
 
