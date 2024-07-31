@@ -167,7 +167,7 @@ code {
 <h3 id="how_5"><a class="toclink" href="#how_5">How</a></h3>
 <p>Add the following to your <code>CFLAGS</code> and <code>CXXFLAGS</code>: <code>-march=x86-64</code></p>
 <h3 id="why_5"><a class="toclink" href="#why_5">Why</a></h3>
-<p>This may be important if you want to do reversible debugging. Reversible debugging requires a detailed model of the hardware ISA. Historically, reverse debuggers have not supported all x86_64 instructions (e.g. AVX). <code>x86-64</code> is the baseline 64-bit x86 architecture without extensions, which is likely to be well-supported by all tools.</p>
+<p>This may be important if you want to do reversible debugging <sup id="fnref:rev_fix"><a class="footnote-ref" href="#fn:rev_fix">3</a></sup>. Reversible debugging requires a detailed model of the hardware ISA. Historically, reverse debuggers have not supported all x86_64 instructions (e.g. AVX). <code>x86-64</code> is the baseline 64-bit x86 architecture without extensions, which is likely to be well-supported by all tools.</p>
 <h3 id="ref_5"><a class="toclink" href="#ref_5">Ref</a></h3>
 <ul>
 <li><a href="https://wiki.gentoo.org/wiki/GCC_optimization#-march">Gentoo guide to exactly the opposite</a></li>
@@ -187,11 +187,14 @@ code {
 </ul>
 <h1 id="semi-specific-compilation-and-source-changes"><a class="toclink" href="#semi-specific-compilation-and-source-changes">Semi-Specific Compilation and Source Changes</a></h1>
 <h2 id="partition-your-tus-into-debuggable-and-fast"><a class="toclink" href="#partition-your-tus-into-debuggable-and-fast">Partition your TUs into "debuggable" and "fast"</a></h2>
-<p>Partition your TUs into "debuggable" and "fast", and compile the "debuggable" TUs with <code>--gdb3 -O0</code> and the  "fast" TU's with <code>--gdb3 -O3</code>.</p>
+<p>Partition your TUs into "debuggable" and "fast", and compile the "debuggable" TUs with <code>--ggdb3 -O0</code> and the  "fast" TU's with <code>--ggdb3 -O3</code> <sup id="fnref:gdb_fix"><a class="footnote-ref" href="#fn:gdb_fix">4</a></sup>.</p>
 <h3 id="how_7"><a class="toclink" href="#how_7">How</a></h3>
 <p>You need to build different sets of TUs with different <code>CFLAGS</code> and <code>CXXFLAGS</code>.</p>
 <p>This is unfortunately quite specific to your build system, and I am not aware of any that have this as a built-in feature. My recommendation is to hack up your build system so that you can specify a set of "debuggable" TUs, and then either convince your coworkers to let you merge the change or maintain it for yourself on a private branch.</p>
-<p>Alternatively, you may be able to bypass the build system entirely. If your codebase has a compile_commands.json so that clangd can provide accurate intellisense, then you can re-purpose it to help you. The compilation database will have compiler commands for every TU in your project. You want to write a script that 1) runs a normal optimized build of your project, 2) grabs the compiler commands for your "debuggable" TUs, re-writes them with <code>--gdb3 -O0</code> flags, and runs them, and 3) re-runs the linker command to relink the executable with the new debuggable object files.</p>
+<p>Alternatively, you may be able to bypass the build system entirely. If your codebase has a compile_commands.json so that clangd can provide accurate intellisense, then you can re-purpose it to help you. The compilation database will have compiler commands for every TU in your project. You want to write a script that 1) runs a normal optimized build of your project, 2) grabs the compiler commands for your "debuggable" TUs, re-writes them with <code>--ggdb3 -O0</code> flags, and runs them, and 3) re-runs the linker command to relink the executable with the new debuggable object files.</p>
+<p>Alternatively, gcc, clang, and msvc each provide pragmas that control optimizations for individual functions or ranges of functions: <sup id="fnref:pragma_fix"><a class="footnote-ref" href="#fn:pragma_fix">5</a></sup></p>
+<p>For gcc, add <code>#pragma GCC optimize ("O0")</code> to the top of your "debuggable" source files, and compile the entire project with <code>--ggdb3 -O3</code>.</p>
+<p>For clang, add <code>#pragma clang optimize off</code> to the top of your "debuggable" source files, and compile the entire project with <code>--ggdb3 -O3</code>.</p>
 <h3 id="why_7"><a class="toclink" href="#why_7">Why</a></h3>
 <p>C++ is often used for code that has to be fast. Unoptimized C++ code can be very slow, especially in large projects. Note that when debugging you often have a pretty good idea of roughly where the bug is going to be, even if you don't know exactly what's going wrong. And the ABI of the generated code doesn't depend on the optimization level, so it is possible to link together optimized and unoptimized TUs. So then, a reasonable strategy is to identify the TUs that have to be debugged, and then only compile those without optimizations, and compile the rest of the project with optimizations.</p>
 <p>Note that we do still want debug information for the optimized TUs. This will always make our backtraces more informative, and we will sometimes be wrong about where the bug is, so it would be nice to poke around in the optimized TUs for a bit to gather information before we recompile (although the debugging experience will be worse).</p>
@@ -200,6 +203,9 @@ code {
 <h3 id="ref_7"><a class="toclink" href="#ref_7">Ref</a></h3>
 <ul>
 <li><a href="https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html">GCC manual on optimization levels</a></li>
+<li><a href="https://gcc.gnu.org/onlinedocs/gcc/Function-Specific-Option-Pragmas.html">GCC manual on optimization pragmas</a></li>
+<li><a href="https://clang.llvm.org/docs/LanguageExtensions.html#extensions-for-selectively-disabling-optimization">Clang manual on optimization pragmas</a></li>
+<li><a href="https://learn.microsoft.com/en-us/cpp/preprocessor/optimize?view=msvc-170">MSVC manual on optimization pragmas</a></li>
 </ul>
 <h2 id="explicitly-instantiate-important-template-classes"><a class="toclink" href="#explicitly-instantiate-important-template-classes">Explicitly instantiate important template classes</a></h2>
 <p>Explicitly instantiate every template class specialization that you want to debug.</p>
@@ -247,7 +253,7 @@ code {
 void func() {
 ...
     if (breakpoint_1 &amp;&amp; (x_id == 153827)) {
-        __asm(&quot;int $3&quot;);
+        __asm(&quot;int3\n\tnop&quot;);
     }
 ...
 }
@@ -256,7 +262,8 @@ void func() {
 <div class="highlight"><pre><span></span><code>(gdb) p breakpoint_1 = true
 </code></pre></div>
 
-<p>Make sure that <code>breakpoint_1</code> has external linkage (e.g. isn't static and isn't inside of an anonymous namespace) so that you can easily enable/disable it regardless of where your debuggger is sitting in the stack.</p>
+<p>The <code>nop</code> instruction after the <code>int3</code> helps gdb understand the context of where the breakpoint fired <sup id="fnref:int_fix"><a class="footnote-ref" href="#fn:int_fix">6</a></sup> .</p>
+<p>Make sure that <code>breakpoint_1</code> has external linkage (e.g. isn't static and isn't inside of an anonymous namespace) so that you can easily enable/disable it regardless of where your debugger is sitting in the stack.</p>
 <h3 id="why_11"><a class="toclink" href="#why_11">Why</a></h3>
 <p>If you create a conditional breakpoint from inside of gdb, then it will trap on every occurrence, evaluate your break condition, and continue if the break condition is not met. This can be very slow. gdb does it this way because it only requires overwriting a single byte of the binary, which it knows how to do safely.</p>
 <p>The way that gdb sets a breakpoint is to temporarily replace an instruction with the single byte <code>int $3</code> instruction, which has opcode 0xCC. This instruction generates a software interrupt and allows gdb to take over control. Then, once the instruction is hit, gdb makes sure to also evaluate the single instruction that it had to remove.</p>
@@ -318,6 +325,18 @@ Also add lines for any third-party libraries or fast TUs that you would like to 
 </li>
 <li id="fn:printf_fails">
 <p>Unless you don't see output because the output is buffered and hasn't been flushed, or because stdout is closed or redirected.&#160;<a class="footnote-backref" href="#fnref:printf_fails" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+<li id="fn:rev_fix">
+<p>I needed this for gdb's builtin reversible debugging. HN user <code>mark_undoio</code> says <a href="https://news.ycombinator.com/item?id=41101564">here</a> that this is not usually necessary with <a href="https://rr-project.org/">rr</a> or <a href="https://undo.io/">Undo</a>, which are more powerful, much faster, and have more complete ISA support. I would recommend them over gdb's builtin support.&#160;<a class="footnote-backref" href="#fnref:rev_fix" title="Jump back to footnote 3 in the text">&#8617;</a></p>
+</li>
+<li id="fn:gdb_fix">
+<p>Thanks to HN user <code>dataflow</code> for catching my typos <a href="https://news.ycombinator.com/item?id=41105618">here</a>.&#160;<a class="footnote-backref" href="#fnref:gdb_fix" title="Jump back to footnote 4 in the text">&#8617;</a></p>
+</li>
+<li id="fn:pragma_fix">
+<p>Thanks to HN users <code>forrestthewoods</code>, <code>o11c</code>, and <code>bialpio</code> for pointing out <a href="https://news.ycombinator.com/item?id=41101725">here</a> that these pragmas exist.&#160;<a class="footnote-backref" href="#fnref:pragma_fix" title="Jump back to footnote 5 in the text">&#8617;</a></p>
+</li>
+<li id="fn:int_fix">
+<p>Thanks to HN user <code>amluto</code> for suggesting the <code>nop</code> instruction <a href="https://news.ycombinator.com/item?id=41104749">here</a>.&#160;<a class="footnote-backref" href="#fnref:int_fix" title="Jump back to footnote 6 in the text">&#8617;</a></p>
 </li>
 </ol>
 </div>
