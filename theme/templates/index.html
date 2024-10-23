@@ -9,7 +9,8 @@
             <aside id="featured" class="body">
                 <article>
                     <h1 class="entry-title"><a href="{{ SITEURL }}/{{ article.url }}">{{ article.title }}</a></h1>
-                    {% include 'article_infos.html' %}{{ article.content }}{% include 'comments.html' %}
+                    {% include 'article_infos.html' %}{{ article.summary }}{% include 'comments.html' %}
+                    <a class="readmore" href="{{ SITEURL }}/{{ article.url }}">read more</a>
                 </article>
             </aside><!-- /#featured -->
             {% if loop.length > 1 %}
