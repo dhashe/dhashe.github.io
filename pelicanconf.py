@@ -2,6 +2,8 @@ AUTHOR = "David Hashe"
 SITENAME = "David Hashe | Personal website and blog"
 SITEURL = ""
 
+THEME = "theme"
+
 PATH = "content"
 PAGE_PATHS = ["pages"]
 ARTICLE_PATHS = ["articles"]
