@@ -1,5 +1,250 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>David Hashe | Personal website and blog</title><link href="https://dhashe.com/" rel="alternate"></link><link href="https://dhashe.com/feeds/all.atom.xml" rel="self"></link><id>https://dhashe.com/</id><updated>2024-10-12T20:00:00-04:00</updated><entry><title>vidsteps</title><link href="https://dhashe.com/vidsteps.html" rel="alternate"></link><published>2024-10-12T20:00:00-04:00</published><updated>2024-10-12T20:00:00-04:00</updated><author><name>David Hashe</name></author><id>tag:dhashe.com,2024-10-12:/vidsteps.html</id><summary type="html">&lt;p&gt;I wrote a quick tool to help myself follow along to recipe videos as I cook. The idea is to divide a video into "steps" and then play the video step-by-step, looping the current step until told to advance.&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>David Hashe | Personal website and blog</title><link href="https://dhashe.com/" rel="alternate"></link><link href="https://dhashe.com/feeds/all.atom.xml" rel="self"></link><id>https://dhashe.com/</id><updated>2024-10-24T21:00:00-04:00</updated><entry><title>Responses to walking a very large poodle</title><link href="https://dhashe.com/responses-to-walking-a-very-large-poodle.html" rel="alternate"></link><published>2024-10-24T21:00:00-04:00</published><updated>2024-10-24T21:00:00-04:00</updated><author><name>David Hashe</name></author><id>tag:dhashe.com,2024-10-24:/responses-to-walking-a-very-large-poodle.html</id><summary type="html">&lt;style&gt;
+figcaption {
+  text-align: center;
+}
+
+video {
+  display: block;
+  margin: 0 auto;
+}
+
+img {
+  display: block;
+  margin: 0 auto;
+}
+&lt;/style&gt;
+
+&lt;p&gt;&lt;em&gt;Shameless plug: &lt;a href="https://www.instagram.com/poky_poodle_puppy/"&gt;Archie is on Instagram&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;I was inspired by a recent &lt;a href="https://news.ycombinator.com/item?id=39103142"&gt;article posted on HN&lt;/a&gt; about how people responded to seeing a man unicycling, to do a similar analysis of the way people responded …&lt;/p&gt;</summary><content type="html">&lt;style&gt;
+figcaption {
+  text-align: center;
+}
+
+video {
+  display: block;
+  margin: 0 auto;
+}
+
+img {
+  display: block;
+  margin: 0 auto;
+}
+&lt;/style&gt;
+
+&lt;p&gt;&lt;em&gt;Shameless plug: &lt;a href="https://www.instagram.com/poky_poodle_puppy/"&gt;Archie is on Instagram&lt;/a&gt;.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;I was inspired by a recent &lt;a href="https://news.ycombinator.com/item?id=39103142"&gt;article posted on HN&lt;/a&gt; about how people responded to seeing a man unicycling, to do a similar analysis of the way people responded to seeing me walking my partner's very large standard poodle. Over a two month period from 2024/7/13 to 2024/9/17, I recorded every verbal comment that I overheard about our dog Archie while walking him twice daily around Manhattan, as well as basic demographic information about the comment-giver. I excluded comments from conversations that I initiated, as well as any comments from people I knew. This is an analysis of the kinds of unprompted comments that New Yorkers make about our dog.&lt;/p&gt;
+&lt;figure&gt;
+  &lt;img src="/images/poodle-walks/poodle/metro-north.jpg" alt="A poodle lays down across three seats on a Metro North commuter train."/&gt;
+  &lt;figcaption&gt;&lt;em&gt;So majestic.&lt;/em&gt;&lt;/figcaption&gt;
+&lt;/figure&gt;
+
+&lt;p&gt;Archie is the largest poodle that I have ever seen. He has a wonderful, calm, friendly temperament and is great with kids. He's the kind of dog that attracts a lot of positive attention, and he charms everyone he meets. My partner did a wonderful job training him. We joke that wherever Archie goes, he inspires people to get poodles of their own, and we know of several cases where that has happened for sure!&lt;/p&gt;
+&lt;figure&gt;
+  &lt;video autoplay loop muted playsinline width=70%&gt;
+    &lt;source src="/images/poodle-walks/poodle/wag.mp4" type="video/mp4"&gt;
+  &lt;/video&gt;
+  &lt;figcaption&gt;&lt;em&gt;He deserves everything he wants.&lt;/em&gt;&lt;/figcaption&gt;
+&lt;/figure&gt;
+
+&lt;p&gt;Before meeting Archie, I didn't have much of an idea what poodles were like. The stereotype about poodles is that they are snooty and feminine. People did tend to assume that Archie was a girl at first, although I didn't record data on how often that happened. But what I've learned is that poodles are wonderful companion dogs. They are attentive, loyal, good-natured, and affectionate. They play in a very distinctive way, with lots of spinning. It's very cute. You should get a poodle.&lt;/p&gt;
+&lt;figure&gt;
+  &lt;img src="/images/poodle-walks/poodle/helmets.jpg" alt="Two matching ebike helmet with decals of a poodle and the text: I have Standards."/&gt;
+  &lt;figcaption&gt;&lt;em&gt;We're not crazy poodle people. Pay no attention to the matching helmets.&lt;/em&gt;&lt;/figcaption&gt;
+&lt;/figure&gt;
+
+&lt;p&gt;Anyway, I made a bunch of graphs. Graphs are great.&lt;/p&gt;
+&lt;h1 id="demographics"&gt;&lt;a class="toclink" href="#demographics"&gt;Demographics&lt;/a&gt;&lt;/h1&gt;
+&lt;p&gt;I divided people by gender into Male / Female, and by age into Kid (18 or under), College (19-24), Adult (25-64), and Older (65+). This was based on my own judgment and is probably not perfectly accurate. I did not collect information on race or ethnicity, but the population was diverse. If I were unsure of which category to put someone, then I excluded that comment from the category breakdown.&lt;/p&gt;
+&lt;p&gt;In retrospect, I wish that I had divided Adult into more categories. Most of the comment-givers fell into Adult.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="/images/poodle-walks/graphs/comments_by_age.png"&gt;
+&lt;img alt="" src="/images/poodle-walks/graphs/comments_by_gender.png"&gt;&lt;/p&gt;
+&lt;p&gt;I did not collect a base rate for how common each group was, so the data doesn't tell us if an individual from any particular group is more likely to comment then an individual from any other group. In other words, the way to interpret the charts is &lt;code&gt;P(Group=X | Comment)&lt;/code&gt;, and I don't have &lt;code&gt;P(Group=X)&lt;/code&gt;, so we can't calculate &lt;code&gt;P(Comment | Group=X)&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Here is an example comment from each group:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Gender&lt;/th&gt;
+&lt;th&gt;Age&lt;/th&gt;
+&lt;th&gt;Comment&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;M&lt;/td&gt;
+&lt;td&gt;Kid&lt;/td&gt;
+&lt;td&gt;Look Mommy, that doggy has a leaf on his head!&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;M&lt;/td&gt;
+&lt;td&gt;College&lt;/td&gt;
+&lt;td&gt;I've never seen a dog like that, that's pretty cool man.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;M&lt;/td&gt;
+&lt;td&gt;Adult&lt;/td&gt;
+&lt;td&gt;How much for a haircut? Is he working for that?&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;M&lt;/td&gt;
+&lt;td&gt;Older&lt;/td&gt;
+&lt;td&gt;What a showdog. I hope you win!&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;F&lt;/td&gt;
+&lt;td&gt;Kid&lt;/td&gt;
+&lt;td&gt;I've never seen a real poodle before!&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;F&lt;/td&gt;
+&lt;td&gt;College&lt;/td&gt;
+&lt;td&gt;Can I take a picture? This is my fashion inspo for the day.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;F&lt;/td&gt;
+&lt;td&gt;Adult&lt;/td&gt;
+&lt;td&gt;I love poodles, he looks so fancy and he knows it.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;F&lt;/td&gt;
+&lt;td&gt;Older&lt;/td&gt;
+&lt;td&gt;Beautiful! Take this dollar and buy him something nice, I insist.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h1 id="topics"&gt;&lt;a class="toclink" href="#topics"&gt;Topics&lt;/a&gt;&lt;/h1&gt;
+&lt;p&gt;I grouped comments by topic. Name and Age were common topics but I rarely wrote down whether they asked, so I unfortunately don't have good data on those and have excluded them.&lt;/p&gt;
+&lt;p&gt;I mostly kept Archie's appearance constant while walking him: his haircut stayed the same over the entire period, and he always wore the same collar. However, about halfway through we did paint his toenails green, and starting around the same time he started sometimes wearing a tie. It is not meaningful to directly compare the frequencies of those topics with the others.&lt;/p&gt;
+&lt;figure&gt;
+  &lt;img src="/images/poodle-walks/poodle/subway-tie.jpg" style="width: 70%;" alt="A man and a poodle on a subway platform. The poodle is wearing a necktie."/&gt;
+  &lt;figcaption&gt;&lt;em&gt;He looks good in a tie.&lt;/em&gt;&lt;/figcaption&gt;
+&lt;/figure&gt;
+
+&lt;p&gt;On one occasion, a large leaf fell down and landed on his head, becoming stuck there for some time. It was very cute. All of the leaf comments come from that one walk.&lt;/p&gt;
+&lt;figure&gt;
+  &lt;img src="/images/poodle-walks/poodle/leaf-dog.jpg" style="width: 70%;" alt="A poodle with a leaf on his head walks outside."/&gt;
+  &lt;figcaption&gt;&lt;em&gt;It's called fashion.&lt;/em&gt;&lt;/figcaption&gt;
+&lt;/figure&gt;
+
+&lt;p&gt;&lt;img alt="" src="/images/poodle-walks/graphs/topics.png"&gt;&lt;/p&gt;
+&lt;p&gt;These graphs are intuitive but a little tricky to explain. They show the Bayesian posterior probability distribution of group assuming a uniform prior distribution:&lt;/p&gt;
+&lt;p&gt;1) assume that &lt;code&gt;P(Group=X | Comment, Any Topic)&lt;/code&gt; is equal for all &lt;code&gt;Group&lt;/code&gt;, 2) observe &lt;code&gt;This Topic&lt;/code&gt;, 3) the bar shows &lt;code&gt;P(Group=X | Comment, Any Topic, This Topic)&lt;/code&gt; after applying Bayes' rule. In other words, these graphs show how much you should believe that a comment on a specific topic came from a certain group, if you initially assumed that a comment on any topic was equally likely to be from each group.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="/images/poodle-walks/graphs/topics_by_age.png"&gt;&lt;/p&gt;
+&lt;p&gt;Kids were likely to remark on his size or his painted toenails. That makes sense because he was often bigger than they were, and they are closer to his feet then adults. All age groups were about equally likely to mention him being a poodle. College students were by far the most likely to ask for a photo. Adults were the most concerned about the cost and time spent grooming him (I can relate!). Older people were likely to compare him to an animal or ask if he was a showdog.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="/images/poodle-walks/graphs/topics_by_gender.png"&gt;&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;There is one fewer observation for toenails by gender than by age, because that comment was by a boy and girl and I didn't record which kid commented on his nails.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;Most topics were pretty balanced between genders. Only women commented on his painted toenails. Men were more concerned with his haircut and the cost of grooming and more likely to ask if he was a showdog. I do intuitively consider those to be more masculine topics.&lt;/p&gt;
+&lt;p&gt;Here is an example comment from each topic:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Topic&lt;/th&gt;
+&lt;th&gt;Comment&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Compliment&lt;/td&gt;
+&lt;td&gt;That is the best dog I've ever seen.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Breed&lt;/td&gt;
+&lt;td&gt;Poodle right? Standard?&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Size&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;(to child)&lt;/em&gt; That dog is bigger than you!&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Comparison&lt;/td&gt;
+&lt;td&gt;That's a horse, can I ride it?&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Photo&lt;/td&gt;
+&lt;td&gt;Mind if I take a photo with your beautiful dog?&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Haircut&lt;/td&gt;
+&lt;td&gt;Sickest haircut I've ever seen.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Grooming Cost&lt;/td&gt;
+&lt;td&gt;Grooming bills must be high!&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Grooming Frequency&lt;/td&gt;
+&lt;td&gt;How often do you get him trimmed?&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Showdog&lt;/td&gt;
+&lt;td&gt;Wow! A showdog.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Toenails&lt;/td&gt;
+&lt;td&gt;Oooh, he has painted toenails!&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Tie&lt;/td&gt;
+&lt;td&gt;Love your dogs tie.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Leaf&lt;/td&gt;
+&lt;td&gt;Excuse me, your dog has a leaf on his head.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h1 id="breed-terminology"&gt;&lt;a class="toclink" href="#breed-terminology"&gt;Breed Terminology&lt;/a&gt;&lt;/h1&gt;
+&lt;p&gt;I recorded the most specific breed that people used to describe Archie. There are three types of poodle in the AKC classification: Toy Poodle, Miniature Poodle, and Standard Poodle. Archie is a large Standard Poodle.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="/images/poodle-walks/graphs/breed_by_age.png"&gt;&lt;/p&gt;
+&lt;p&gt;As age increases, people are (probably) more likely to use "Standard Poodle".&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;We don't have enough data for significant results. A Fisher's exact test produces p=0.3443 for the null hypothesis that all four samples are from the same distribution.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="/images/poodle-walks/graphs/breed_by_gender.png"&gt;&lt;/p&gt;
+&lt;p&gt;Woman are (probably) more likely to use "Standard Poodle". There is (probably) no difference is how often men and women use "Poodle". I think that people generally know what a poodle is but mostly just say "dog". I personally tend to say "dog" when complimenting other dogs because I am bad at recognizing breeds and don't want to offend.&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Again, we don't have enough data for significant results. A Fisher's exact test produces p=0.2606 for the null hypothesis that both samples are from the same distribution.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;It was pretty common for people to think he was a poodle mix. I didn't collect data on what they thought he was mixed with, but the most common guess seemed to be Great Dane.&lt;/p&gt;
+&lt;p&gt;We often call Archie a "Royal Standard Poodle", which is not an official AKC breed, but is colloquially a thing that very big poodles can be called. No one else ever called him a royal standard poodle. Although in fairness, we haven't seen any other royal standard poodles in Manhattan.&lt;/p&gt;
+&lt;h1 id="compliments"&gt;&lt;a class="toclink" href="#compliments"&gt;Compliments&lt;/a&gt;&lt;/h1&gt;
+&lt;p&gt;I recorded what compliment words people used when commenting on Archie.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="/images/poodle-walks/graphs/compliments.png"&gt;&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;As I wrote this, we read him the list of compliments in order of descending frequency. He enjoyed it greatly.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;Because there was a long tail of compliments, I restricted these graphs to only popular compliment words. The interpretation is similar to the topic graphs; these are Bayesian posterior probability distributions. &lt;code&gt;P(Group=X | Comment, Any Compliment)&lt;/code&gt; includes the rare compliments that are not included in the graph.&lt;/p&gt;
+&lt;p&gt;To restate, these graphs show how much you should believe that a comment with a specific compliment came from a certain group, if you initially assumed that a comment with any compliment was equally likely to be from each group.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="/images/poodle-walks/graphs/compliments_by_age.png"&gt;&lt;/p&gt;
+&lt;p&gt;Kids were very likely to call him "big". College students favored "cute", "pretty", and "tall". Adults liked "gorgeous" and "nice". Older people went with "beautiful", "fancy", and "handsome". All of these are great words to describe Archie.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="/images/poodle-walks/graphs/compliments_by_gender.png"&gt;&lt;/p&gt;
+&lt;p&gt;I'm not surprised that "gorgeous", "cute", "pretty", and "fancy" predicted women, but I can't get over how strongly "nice" predicted men.&lt;/p&gt;
+&lt;h1 id="comparisons"&gt;&lt;a class="toclink" href="#comparisons"&gt;Comparisons&lt;/a&gt;&lt;/h1&gt;
+&lt;p&gt;Archie is a very large poodle, and he did not have a traditional poodle haircut during the comment period. People often compared him to another animal, or more generally said that he was like something else.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="/images/poodle-walks/graphs/comparisons_grouped.png"&gt;&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Similar comparisons have been grouped together.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;We were going for horse--he has a mane--but the opinions are delightfully varied! I have a feeling that this will vary based on haircut and season, but this is what we got for his current haircut during the summer.&lt;/p&gt;
+&lt;p&gt;The unique comparisons were a lot of fun to hear as well.&lt;/p&gt;
+&lt;p&gt;The person who said Na'vi actually said "Avatar", because no one remembers anything about Avatar besides the title.&lt;/p&gt;
+&lt;figure&gt;
+  &lt;img src="/images/poodle-walks/poodle/navi.png" alt="Two images side-by-side. The left is a poodle wearing a bandana that says Let's Sniff Butts. The right is Jake Sully from the movie Avatar."/&gt;
+  &lt;figcaption&gt;&lt;em&gt;They're the same picture.&lt;/em&gt;&lt;/figcaption&gt;
+&lt;/figure&gt;
+
+&lt;p&gt;We were confused by "Pokemon" until we learned about Furfrou, the poodle Pokemon. Possible Halloween costume for Archie? We just have to choose &lt;a href="https://bulbapedia.bulbagarden.net/wiki/Furfrou_(Pok%C3%A9mon)#:~:text=Forms-,Furfrou%20has%20ten%20different%20forms,-named%20after%20the"&gt;which trim&lt;/a&gt;.&lt;/p&gt;
+&lt;figure&gt;
+  &lt;img src="/images/poodle-walks/poodle/furfrou-trims.png" alt="The 10 different haircuts for Furfrou, the poodle pokemon."/&gt;
+  &lt;figcaption&gt;&lt;em&gt;I think that Archie could pull off the Dandy trim.&lt;/em&gt;&lt;/figcaption&gt;
+&lt;/figure&gt;
+
+&lt;h1 id="comment-rate"&gt;&lt;a class="toclink" href="#comment-rate"&gt;Comment Rate&lt;/a&gt;&lt;/h1&gt;
+&lt;p&gt;I tracked how long I walked Archie each day, which lets me calculate the rate that he got comments.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="/images/poodle-walks/graphs/comments_rate_hist.png"&gt;&lt;/p&gt;
+&lt;p&gt;I unfortunately did not track time-of-day. I didn't walk Archie at very consistent times and that probably accounts for some of the variation in comment rate. But there is an interesting effect for day-of-week:&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="/images/poodle-walks/graphs/comments_rate.png"&gt;&lt;/p&gt;
+&lt;p&gt;The reason that Saturdays are so much higher is that that's when we take him with us to the grocery store and the farmers market. People absolutely love him at the farmers market. I think that it's an environment where people are already curious, social, and relaxed, and so we get a lot of comments.&lt;/p&gt;
+&lt;h1 id="conclusion"&gt;&lt;a class="toclink" href="#conclusion"&gt;Conclusion&lt;/a&gt;&lt;/h1&gt;
+&lt;p&gt;That's about it! Thank you for reading this silly post about our poodle.&lt;/p&gt;
+&lt;figure&gt;
+  &lt;img src="/images/poodle-walks/poodle/nap-time.jpg" alt="A poodle napping on the couch with his head resting on a pillow."/&gt;
+  &lt;figcaption&gt;&lt;em&gt;All tuckered out.&lt;/em&gt;&lt;/figcaption&gt;
+&lt;/figure&gt;
+
+&lt;p&gt;&lt;em&gt;Thank you to Veronica Lopez for many things, including providing feedback on drafts of this post. All mistakes are my own.&lt;/em&gt;&lt;/p&gt;</content><category term="Blog"></category></entry><entry><title>vidsteps</title><link href="https://dhashe.com/vidsteps.html" rel="alternate"></link><published>2024-10-12T20:00:00-04:00</published><updated>2024-10-12T20:00:00-04:00</updated><author><name>David Hashe</name></author><id>tag:dhashe.com,2024-10-12:/vidsteps.html</id><summary type="html">&lt;p&gt;I wrote a quick tool to help myself follow along to recipe videos as I cook. The idea is to divide a video into "steps" and then play the video step-by-step, looping the current step until told to advance.&lt;/p&gt;
 &lt;p&gt;If that sounds useful to you, then check it out &lt;a href="https://github.com/dhashe/vidsteps"&gt;here …&lt;/a&gt;&lt;/p&gt;</summary><content type="html">&lt;p&gt;I wrote a quick tool to help myself follow along to recipe videos as I cook. The idea is to divide a video into "steps" and then play the video step-by-step, looping the current step until told to advance.&lt;/p&gt;
 &lt;p&gt;If that sounds useful to you, then check it out &lt;a href="https://github.com/dhashe/vidsteps"&gt;here&lt;/a&gt;!&lt;/p&gt;</content><category term="Blog"></category></entry><entry><title>How to build highly-debuggable C++ binaries</title><link href="https://dhashe.com/how-to-build-highly-debuggable-c-binaries.html" rel="alternate"></link><published>2024-07-19T09:00:00-04:00</published><updated>2024-07-19T09:00:00-04:00</updated><author><name>David Hashe</name></author><id>tag:dhashe.com,2024-07-19:/how-to-build-highly-debuggable-c-binaries.html</id><summary type="html">&lt;style&gt;
 code {
