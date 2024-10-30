@@ -346,6 +346,10 @@ div.figure p.caption, figure p.caption { /* margin provided by figure */
 		.social a[href*='hackernewsers.com'] {background-image: url('../images/icons/hackernews.png');}
 		.social a[href*='last.fm'], .social a[href*='lastfm.'] {background-image: url('../images/icons/lastfm.png');}
 		.social a[href*='linkedin.com'] {background-image: url('../images/icons/linkedin.png');}
+		.social a[href*='mastodon.social'] {
+			background-image: url('../images/icons/mastodon.png');
+			background-size: 16px 16px;
+		}
 		.social a[href*='reddit.com'] {background-image: url('../images/icons/reddit.png');}
 		.social a[type$='atom+xml'], .social a[type$='rss+xml'] {background-image: url('../images/icons/rss.png');}
 		.social a[href*='slideshare.net'] {background-image: url('../images/icons/slideshare.png');}

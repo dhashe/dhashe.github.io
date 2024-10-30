@@ -27,6 +27,8 @@ LINKS = ()
 SOCIAL = (
     ("github", "https://github.com/dhashe"),
     ("linkedin", "https://www.linkedin.com/in/dhashe"),
+    ("mastodon", "https://mastodon.social/@dhashe"),
+    ("hackernews", "https://news.ycombinator.com/user?id=dhashe"),
 )
 
 DEFAULT_PAGINATION = 10
