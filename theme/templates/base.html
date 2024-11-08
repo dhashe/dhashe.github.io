@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="{% block html_lang %}{{ DEFAULT_LANG }}{% endblock html_lang %}">
 <head>
+        {% include 'analytics.html' %}
         {% block head %}
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -78,7 +79,6 @@
                 <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
         </footer><!-- /#contentinfo -->
 
-{% include 'analytics.html' %}
 {% include 'disqus_script.html' %}
 </body>
 </html>
