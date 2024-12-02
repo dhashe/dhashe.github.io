@@ -140,6 +140,8 @@ It was pretty common for people to think he was a poodle mix. I didn't collect d
 
 We often call Archie a "Royal Standard Poodle", which is not an official AKC breed, but is colloquially a thing that very big poodles can be called. No one else ever called him a royal standard poodle. Although in fairness, we haven't seen any other royal standard poodles in Manhattan.
 
+*Update 12/2/2024: By now, two people have called him a royal standard poodle. I haven't continued keeping records so all that I can say is that the percentage for royal standard poodle is non-zero.*
+
 # Compliments
 
 I recorded what compliment words people used when commenting on Archie.
