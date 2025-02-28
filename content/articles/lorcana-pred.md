@@ -7,6 +7,13 @@ figcaption {
   text-align: center;
 }
 
+table {
+    overflow-x: auto;
+    display: block;
+    width: 100%;
+    max-width: 100%;
+}
+
 .bordered-div {
     border: 2px solid black;
     padding: 25px;
