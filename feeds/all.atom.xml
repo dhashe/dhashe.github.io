@@ -1,5 +1,2579 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>David Hashe | Personal website and blog</title><link href="https://dhashe.com/" rel="alternate"></link><link href="https://dhashe.com/feeds/all.atom.xml" rel="self"></link><id>https://dhashe.com/</id><updated>2024-10-24T21:00:00-04:00</updated><entry><title>Responses to walking a very large poodle</title><link href="https://dhashe.com/responses-to-walking-a-very-large-poodle.html" rel="alternate"></link><published>2024-10-24T21:00:00-04:00</published><updated>2024-10-24T21:00:00-04:00</updated><author><name>David Hashe</name></author><id>tag:dhashe.com,2024-10-24:/responses-to-walking-a-very-large-poodle.html</id><summary type="html">&lt;style&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>David Hashe | Personal website and blog</title><link href="https://dhashe.com/" rel="alternate"></link><link href="https://dhashe.com/feeds/all.atom.xml" rel="self"></link><id>https://dhashe.com/</id><updated>2025-02-28T00:00:00-05:00</updated><entry><title>Predicting character card ink costs using linear regression in Disney Lorcana</title><link href="https://dhashe.com/predicting-character-card-ink-costs-using-linear-regression-in-disney-lorcana.html" rel="alternate"></link><published>2025-02-28T00:00:00-05:00</published><updated>2025-02-28T00:00:00-05:00</updated><author><name>David Hashe</name></author><id>tag:dhashe.com,2025-02-28:/predicting-character-card-ink-costs-using-linear-regression-in-disney-lorcana.html</id><summary type="html">&lt;style&gt;
+figcaption {
+  text-align: center;
+}
+
+.bordered-div {
+    border: 2px solid black;
+    padding: 25px;
+}
+
+.scroll-x {
+    overflow-x: auto;
+}
+&lt;/style&gt;
+
+&lt;p&gt;Over the past few months, my friends and I have gotten into the collectible trading card game Disney Lorcana. I decided that I wanted to use statistics to understand it better. I am not a competitive Lorcana …&lt;/p&gt;</summary><content type="html">&lt;style&gt;
+figcaption {
+  text-align: center;
+}
+
+.bordered-div {
+    border: 2px solid black;
+    padding: 25px;
+}
+
+.scroll-x {
+    overflow-x: auto;
+}
+&lt;/style&gt;
+
+&lt;p&gt;Over the past few months, my friends and I have gotten into the collectible trading card game Disney Lorcana. I decided that I wanted to use statistics to understand it better. I am not a competitive Lorcana player, so please take this article as the viewpoint of a motivated casual player.&lt;/p&gt;
+&lt;p&gt;Lorcana is a complex game, and complex games are difficult to model. Poker is a complex game as well, but I'm going to put it at the left end of the spectrum simply because we &lt;a href="https://arxiv.org/abs/1705.02955"&gt;understand it pretty well at this point&lt;/a&gt;. Moving to the right we have &lt;a href="https://math.leidenuniv.nl/scripties/BSC-vanderHeijden.pdf"&gt;deck-building games&lt;/a&gt; such as Dominion, and then even farther right are trading card games like Lorcana, which have a high number of unique cards with a variety of complex effects. Magic The Gathering has to occupy the right end of the spectrum, of course. It has an order of magnitude more cards than Lorcana, and &lt;a href="https://arxiv.org/abs/1904.09828"&gt;it's even Turing Complete&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Despite the complexity, there are still some good resources that exist for modeling Lorcana in ways that are useful for competitive play. I really like &lt;a href="https://infinite.tcgplayer.com/article/Can-Probability-Theory-Help-You-Build-The-Perfect-Lorcana-Deck/75561a90-a643-454c-9564-ee61f007f47c/"&gt;this one from an actual high-level player&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;But in general trading card games are not the place to look right now if you want to talk about counterfactual regret minimization or monte carlo tree search. The state-of-the-art will get there eventually, I'm sure, but it hasn't yet.&lt;/p&gt;
+&lt;p&gt;For now, I was curious if I could gain any insight into Lorcana by using linear regression to model individual cards. This is not especially useful for competitive play, but I thought it was an interesting exercise and that was enough for me to try it. I do think that it is moderately useful for non-competitive play, and as a learning tool for players new to the game.&lt;/p&gt;
+&lt;p&gt;If you just want the TL;DR for this post, here is the final linear model for predicting the Ink cost of Lorcana cards, a calculator to play with, and a lookup table for the predicted Ink cost of every Lorcana character card from sets 1 to 6:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;Ink_Cost = -1.06704 +
+            0.47718 * Strength +
+            0.47718 * Willpower +
+            0.62207 * Lore +
+            0.39753 * Bodyguard +
+            # The relative amount that Shift reduces the Ink cost to play a card.
+            0.31899 * Shift +
+            # the relative amount that Singer is greater than the Ink cost to play a card.
+            0.21841 * Singer +    
+            0.23768 * (Strength * Support) +
+            1.10404 * Evasive +
+            0.84077 * Rush +
+            0.31541 * Challenger +
+            0.71610 * Ward +
+            0.22977 * Reckless +
+            0.55122 * Resist
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;script&gt;
+      function calculateCost(event) {
+          event.preventDefault();
+
+          let strength = parseInt(document.getElementById("strength").value) || 0;
+          let willpower = parseInt(document.getElementById("willpower").value) || 0;
+          let lore = parseInt(document.getElementById("lore").value) || 0;
+
+          let bodyguard = document.getElementById("bodyguard").checked ? 1 : 0;
+          let evasive = document.getElementById("evasive").checked ? 1 : 0;
+          let rush = document.getElementById("rush").checked ? 1 : 0;
+          let ward = document.getElementById("ward").checked ? 1 : 0;
+          let reckless = document.getElementById("reckless").checked ? 1 : 0;
+          let shift = parseInt(document.getElementById("shift").value) || 0;
+          let singer = parseInt(document.getElementById("singer").value) || 0;
+          let support = document.getElementById("support").checked ? 1 : 0;
+          let challenger = parseInt(document.getElementById("challenger").value) || 0;
+          let resist = parseInt(document.getElementById("resist").value) || 0;
+
+          let cost = -1.06704 +
+              (0.47718 * strength) +
+              (0.47718 * willpower) +
+              (0.62207 * lore) +
+              (0.39753 * bodyguard) +
+              (0.31899 * shift) +
+              (0.21841 * singer) +
+              (0.23768 * strength * support) +
+              (1.10404 * evasive) +
+              (0.84077 * rush) +
+              (0.31541 * challenger) +
+              (0.71610 * ward) +
+              (0.22977 * reckless) +
+              (0.55122 * resist);
+
+          document.getElementById("result").textContent = "Predicted Cost: " + cost.toFixed(5);
+      }
+  &lt;/script&gt;
+&lt;div class="bordered-div"&gt;
+    &lt;h2&gt;Ink Cost Calculator&lt;/h2&gt;
+    &lt;form onsubmit="calculateCost(event)"&gt;
+        &lt;label&gt;Strength (≥0): &lt;input type="number" id="strength" min="0" value="0"&gt;&lt;/label&gt;&lt;br&gt;
+        &lt;label&gt;Willpower (≥0): &lt;input type="number" id="willpower" min="0" value="0"&gt;&lt;/label&gt;&lt;br&gt;
+        &lt;label&gt;Lore (≥0): &lt;input type="number" id="lore" min="0" value="0"&gt;&lt;/label&gt;&lt;br&gt;
+        &lt;br&gt;
+        &lt;label&gt;Bodyguard: &lt;input type="checkbox" id="bodyguard"&gt;&lt;/label&gt;&lt;br&gt;
+        &lt;label&gt;Challenger (≥0): &lt;input type="number" id="challenger" min="0" value="0"&gt;&lt;/label&gt;&lt;br&gt;
+        &lt;label&gt;Evasive: &lt;input type="checkbox" id="evasive"&gt;&lt;/label&gt;&lt;br&gt;
+        &lt;label&gt;Reckless: &lt;input type="checkbox" id="reckless"&gt;&lt;/label&gt;&lt;br&gt;
+        &lt;label&gt;Resist (≥0): &lt;input type="number" id="resist" min="0" value="0"&gt;&lt;/label&gt;&lt;br&gt;
+        &lt;label&gt;Rush: &lt;input type="checkbox" id="rush"&gt;&lt;/label&gt;&lt;br&gt;
+        &lt;p&gt;&lt;em&gt;Enter the relative amount that Shift reduces the Ink cost to play a card. For example, for a cost 6 card with Shift 4, enter 2:&lt;/em&gt;&lt;/p&gt;
+        &lt;label&gt;Shift (≥0): &lt;input type="number" id="shift" min="0" value="0"&gt;&lt;/label&gt;&lt;br&gt;
+        &lt;p&gt;&lt;em&gt;Enter the relative amount that Singer is greater than the Ink cost to play a card. For example, for a cost 2 card with Singer 5, enter 3:&lt;/em&gt;&lt;/p&gt;
+        &lt;label&gt;Singer (≥0): &lt;input type="number" id="singer" min="0" value="0"&gt;&lt;/label&gt;&lt;br&gt;
+        &lt;label&gt;Support: &lt;input type="checkbox" id="support"&gt;&lt;/label&gt;&lt;br&gt;
+        &lt;label&gt;Ward: &lt;input type="checkbox" id="ward"&gt;&lt;/label&gt;&lt;br&gt;
+        &lt;br&gt;
+        &lt;button type="submit"&gt;Calculate&lt;/button&gt;
+    &lt;/form&gt;
+    &lt;h3 id="result"&gt;Predicted Cost: &lt;/h3&gt;
+  &lt;/div&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;script&gt;
+        // Note: https://stackoverflow.com/a/36288398
+        /**
+        * CSVToArray parses any String of Data including '\r' '\n' characters,
+        * and returns an array with the rows of data.
+        * @param {String} CSV_string - the CSV string you need to parse
+        * @param {String} delimiter - the delimeter used to separate fields of data
+        * @returns {Array} rows - rows of CSV where first row are column headers
+        */
+        function CSVToArray(CSV_string, delimiter) {
+            delimiter = (delimiter || ","); // user-supplied delimeter or default comma
+
+            var pattern = new RegExp( // regular expression to parse the CSV values.
+                ( // Delimiters:
+                "(\\" + delimiter + "|\\r?\\n|\\r|^)" +
+                // Quoted fields.
+                "(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|" +
+                // Standard fields.
+                "([^\"\\" + delimiter + "\\r\\n]*))"
+                ), "gi"
+            );
+
+            var rows = [[]];  // array to hold our data. First row is column headers.
+            // array to hold our individual pattern matching groups:
+            var matches = false; // false if we don't find any matches
+            // Loop until we no longer find a regular expression match
+            while (matches = pattern.exec( CSV_string )) {
+                var matched_delimiter = matches[1]; // Get the matched delimiter
+                // Check if the delimiter has a length (and is not the start of string)
+                // and if it matches field delimiter. If not, it is a row delimiter.
+                if (matched_delimiter.length &amp;&amp; matched_delimiter !== delimiter) {
+                    // Since this is a new row of data, add an empty row to the array.
+                    rows.push( [] );
+                }
+                var matched_value;
+                // Once we have eliminated the delimiter, check to see
+                // what kind of value was captured (quoted or unquoted):
+                if (matches[2]) { // found quoted value. unescape any double quotes.
+                    matched_value = matches[2].replace(
+                    new RegExp( "\"\"", "g" ), "\""
+                    );
+                } else { // found a non-quoted value
+                    matched_value = matches[3];
+                }
+                // Now that we have our value string, let's add
+                // it to the data array.
+                rows[rows.length - 1].push(matched_value);
+            }
+            return rows; // Return the parsed data Array
+        }
+
+        let data = [];
+
+        // Load the CSV file
+        async function loadCSV() {
+            const response = await fetch('/files/lorcana-pred/lorcana_all_char.csv');
+            const text = await response.text();
+            const rows = CSVToArray(text);
+
+            const headers = rows.shift().map(h =&gt; h.trim()); // Get headers
+
+            // Convert CSV rows into an array of objects
+            data = rows.map(row =&gt; {
+                let obj = {};
+                headers.forEach((header, index) =&gt; {
+                    obj[header] = (row[index] === null || row[index] === undefined) ? "" : row[index].trim();
+                });
+                return obj;
+            });
+        }
+
+        // Update the table based on input
+        function updateTable() {
+            const input = document.getElementById("search").value.toLowerCase();
+            const tbody = document.getElementById("results");
+            tbody.innerHTML = ""; // Clear previous results
+
+            if (!input) return;
+
+            const filtered = data.filter(row =&gt; row.Name.toLowerCase().includes(input));
+
+            filtered.forEach(row =&gt; {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    &lt;td&gt;${row.Name}&lt;/td&gt;
+                    &lt;td&gt;${row.Strength}&lt;/td&gt;
+                    &lt;td&gt;${row.Willpower}&lt;/td&gt;
+                    &lt;td&gt;${row.Inkable}&lt;/td&gt;
+                    &lt;td&gt;${row.Lore}&lt;/td&gt;
+                    &lt;td&gt;${row.Keywords}&lt;/td&gt;
+                    &lt;td&gt;${row.Has_Bespoke}&lt;/td&gt;
+                    &lt;td&gt;${row.is_meta}&lt;/td&gt;
+                    &lt;td&gt;${row.Cost}&lt;/td&gt;
+                    &lt;td&gt;${row.Basic_Cost}&lt;/td&gt;
+                    &lt;td&gt;${row.Keyword_Cost}&lt;/td&gt;
+                    &lt;td&gt;${row.Bespoke_Cost}&lt;/td&gt;
+                    &lt;td&gt;${row.res}&lt;/td&gt;
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", () =&gt; {
+            loadCSV();
+            document.getElementById("search").addEventListener("input", updateTable);
+        });
+  &lt;/script&gt;
+&lt;div class="bordered-div"&gt;
+    &lt;h2&gt;Card Lookup&lt;/h2&gt;
+    &lt;input type="text" id="search" placeholder="Type card name to search..." /&gt;
+
+    &lt;pre&gt;Cost = Basic_Cost + Keyword_Cost + Bespoke_Cost + Residual&lt;/pre&gt;
+
+    &lt;div class="scroll-x"&gt;
+      &lt;table border="1"&gt;
+          &lt;thead&gt;
+              &lt;tr&gt;
+                  &lt;th&gt;Name&lt;/th&gt;
+                  &lt;th&gt;Strength&lt;/th&gt;
+                  &lt;th&gt;Willpower&lt;/th&gt;
+                  &lt;th&gt;Inkable&lt;/th&gt;
+                  &lt;th&gt;Lore&lt;/th&gt;
+                  &lt;th&gt;Keywords&lt;/th&gt;
+                  &lt;th&gt;Has_Bespoke&lt;/th&gt;
+                  &lt;th&gt;Is_Meta&lt;/th&gt;
+                  &lt;th&gt;Cost&lt;/th&gt;
+                  &lt;th&gt;Basic_Cost&lt;/th&gt;
+                  &lt;th&gt;Keyword_Cost&lt;/th&gt;
+                  &lt;th&gt;Bespoke_Cost&lt;/th&gt;
+                  &lt;th&gt;Residual&lt;/th&gt;
+              &lt;/tr&gt;
+          &lt;/thead&gt;
+          &lt;tbody id="results"&gt;
+              &lt;!-- Results appear here --&gt;
+          &lt;/tbody&gt;
+      &lt;/table&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+&lt;p&gt;I used a combination of Python for data scraping and R for analysis. I have published a repo &lt;a href="https://github.com/dhashe/lorcana-pred"&gt;here&lt;/a&gt; that contains all of the code and data needed to replicate or extend my analysis.&lt;/p&gt;
+&lt;p&gt;I also provide a CSV download &lt;a href="/files/lorcana-pred/lorcana_all_char.csv"&gt;here&lt;/a&gt; of the character card data that may be easier for others to use, and a list of cards that are commonly used in competitive decks &lt;a href="/files/lorcana-pred/lorcana_meta_cards.csv"&gt;here&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;For this post, I'm not going to include any code. This is a stylistic choice because I want to write to a general audience. I will show the linear models, and some relevant data tables and statistical test outputs, but I aim to explain everything that I do in plain language.&lt;/p&gt;
+&lt;h1 id="table-of-contents"&gt;Table of Contents&lt;a class="headerlink" href="#table-of-contents" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h1&gt;
+&lt;div class="toc"&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="#table-of-contents"&gt;Table of Contents&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#predicting-card-costs"&gt;Predicting card costs&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href="#card-data"&gt;Card data&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#modeling-basic-cards"&gt;Modeling basic cards&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#modeling-kwonly-cards"&gt;Modeling kwonly cards&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#not-modeling-bespoke-cards"&gt;Not modeling bespoke cards&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="#analyzing-meta-relevant-cards"&gt;Analyzing meta-relevant cards&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href="#meta-deck-data"&gt;Meta deck data&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#meta-basic-cards"&gt;Meta basic cards&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#meta-kwonly-cards"&gt;Meta kwonly cards&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#meta-bespoke-cards"&gt;Meta bespoke cards&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="#miscellaneous-analysis"&gt;Miscellaneous analysis&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href="#vanilla-curves-for-different-ink-types"&gt;Vanilla curves for different ink types&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#rarities-and-residuals"&gt;Rarities and Residuals&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#rarities-and-complexity"&gt;Rarities and Complexity&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#is-there-power-creep-yet"&gt;Is there power creep yet?&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="#discussion"&gt;Discussion&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href="#why-is-reckless-priced-as-a-buff"&gt;Why is Reckless priced as a buff?&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#what-is-inkability-for"&gt;What is Inkability for?&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#when-are-single-card-models-useful"&gt;When are single-card models useful?&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="#future-work"&gt;Future Work&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;h1 id="predicting-card-costs"&gt;Predicting card costs&lt;a class="headerlink" href="#predicting-card-costs" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h1&gt;
+&lt;h2 id="card-data"&gt;Card data&lt;a class="headerlink" href="#card-data" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;My data source for Lorcana card information is &lt;a href="https://lorcana-api.com"&gt;lorcana-api.com&lt;/a&gt; via bulk download on 2025/02/19. I am grateful for them for providing this resource, but I do have to note that there were some data accuracy issues, especially with keywords and body text. I have not contacted them to fix these issues, so that's on me. I know how much work it is to put something like that together, and how unappreciated that work can be.&lt;/p&gt;
+&lt;p&gt;I fixed everything that I could find for keywords because it was important to my analysis, but there still may be some inaccuracies. If you notice any more data issues, then I would appreciate it if you raise an issue on the &lt;a href="https://github.com/dhashe/lorcana-pred"&gt;github repo&lt;/a&gt; so that I can correct them.&lt;/p&gt;
+&lt;p&gt;I will only be looking at character cards, and not actions, songs, items, or locations. I divide character cards into three groups by complexity: "basic" cards have no keywords or non-keyword abilities, "kwonly" cards have keywords but don't have non-keyword abilities, and "bespoke" cards have non-keyword abilities.&lt;/p&gt;
+&lt;p&gt;For basic and kwonly cards, I will be attempting to predict the Ink cost of the card based on the card attributes. Training models will give us insight into how much each attribute and keyword costs. Then, we will expect "good" cards to actually cost less than what the model predicts, and "bad" cards to actually cost more. For bespoke cards, I will only estimate the cost of their non-keyword abilities. It is too difficult to make an accurate model for bespoke cards.&lt;/p&gt;
+&lt;h2 id="modeling-basic-cards"&gt;Modeling basic cards&lt;a class="headerlink" href="#modeling-basic-cards" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;I assume for the sake of my model that the Ink cost to play a card is a linear combination of its Strength (attack), Willpower (hitpoints), and Lore (victory points).&lt;/p&gt;
+&lt;p&gt;I think that this is a reasonable assumption. We know that the game designers have a &lt;a href="https://gamerant.com/disney-lorcana-interview-steve-warner-balance-design/"&gt;vanilla curve&lt;/a&gt; for what stats a card can have based on its Ink cost. I think it is reasonable to assume that the vanilla curve can be approximated by a linear function.&lt;/p&gt;
+&lt;p&gt;I will use a single coefficient for the sum of Strength and Willpower, because they end up with almost identical coefficients even if I don't do that, and so I think that they probably do share a coefficient in reality.&lt;/p&gt;
+&lt;p&gt;I exclude Inkability (whether it can be played as a resource card), because it turns out that adding Inkability doesn't make the model more accurate, and the value of the Inkability coefficient is not stable when I remove one set at a time for cross-validation.&lt;/p&gt;
+&lt;p&gt;I have a bias towards building a model that is as simple as possible. A simple model protects me against over-fitting, which is a concern when there isn't much data.&lt;/p&gt;
+&lt;p&gt;As a final note, we are trying to use linear regression for &lt;a href="https://en.wikipedia.org/wiki/Causal_inference"&gt;causal inference&lt;/a&gt;. This is tricky, and not something that automatically works. Your level of confidence in the ability of this model to predict the ink cost of new Lorcana costs should reflect your level of confidence that I have included all important factors as inputs into the model.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;Model:
+Cost = -1.06704 + 0.47718 * StrengthPlusWillpower + 0.62207 * Lore
+
+Coefficients:
+                      Estimate Std. Error t value Pr(&amp;gt;|t|)    
+(Intercept)           -1.06704    0.08906  -11.98   &amp;lt;2e-16 ***
+StrengthPlusWillpower  0.47718    0.01058   45.10   &amp;lt;2e-16 ***
+Lore                   0.62207    0.04535   13.72   &amp;lt;2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.419 on 164 degrees of freedom
+Multiple R-squared:  0.9491,    Adjusted R-squared:  0.9485 
+F-statistic:  1528 on 2 and 164 DF,  p-value: &amp;lt; 2.2e-16
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;This very simple model is good enough to get us pretty high accuracy, and adding additional parameters doesn't really help. The model predicts 87% of basic cards to within half an Ink.&lt;/p&gt;
+&lt;p&gt;I chose half an Ink as my threshold for a successful prediction because in practice I would always round my prediction to the nearest Ink.&lt;/p&gt;
+&lt;p&gt;It is important to use the exact values for the coefficients. Rounding them to the nearest 0.1 drops the accuracy to 66%, and rounding them to the nearest 0.5 drops the accuracy to 50%. I want to say this explicitly because I know that people will do it otherwise if I don't warn them.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Formula&lt;/th&gt;
+&lt;th&gt;Accuracy&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;-1.06704 + 0.47718 * StrengthPlusWillpower + 0.62207 * Lore&lt;/td&gt;
+&lt;td&gt;0.8682635&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;-1.07 + 0.48 * StrengthPlusWillpower + 0.62 * Lore&lt;/td&gt;
+&lt;td&gt;0.8622754&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;-1.1 + 0.5 * StrengthPlusWillpower + 0.6 * Lore&lt;/td&gt;
+&lt;td&gt;0.6646707&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;-1.0 + 0.5 * StrengthPlusWillpower + 0.5 * Lore&lt;/td&gt;
+&lt;td&gt;0.502994&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;How do we gain confidence that the model isn't overfitted or fragile? We train the model six times, excluding one Set from training each time, and then test on the held out Set. If accuracy is maintained, and the coefficients don't change much, then we have evidence that we can trust our model. This process is called cross-validation.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Held-out Set&lt;/th&gt;
+&lt;th&gt;Out-of-sample Accuracy&lt;/th&gt;
+&lt;th&gt;Formula&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;0.875&lt;/td&gt;
+&lt;td&gt;-0.9945993 + 0.4644756 * StrengthPlusWillpower + 0.6217872 * Lore&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;0.9090909&lt;/td&gt;
+&lt;td&gt;-1.1498291 + 0.4877223 * StrengthPlusWillpower + 0.6299706 * Lore&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;0.9090909&lt;/td&gt;
+&lt;td&gt;-1.0403014 + 0.4751897 * StrengthPlusWillpower + 0.6101202 * Lore&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;0.88&lt;/td&gt;
+&lt;td&gt;-1.0480664 + 0.4738874 * StrengthPlusWillpower + 0.6245760 * Lore&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;0.6086957&lt;/td&gt;
+&lt;td&gt;-1.1473403 + 0.4859783 * StrengthPlusWillpower + 0.6549590 * Lore&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;6&lt;/td&gt;
+&lt;td&gt;0.8333333&lt;/td&gt;
+&lt;td&gt;-1.0287587 + 0.4777975 * StrengthPlusWillpower + 0.5879933 * Lore&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;This model works pretty well even when holding out one set, except for Set 5 (Shimmering Skies) for some reason, where the out-of-sample accuracy drops to 61%. I am not sure why that is, and it is certainly not ideal.&lt;/p&gt;
+&lt;p&gt;While we're doing cross-validation, I'll show you the problem with adding Inkability to the model. Adding it makes the out-of-sample accuracy noticeably worse, and the value of the Inkable parameter is not stable.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Held-out Set&lt;/th&gt;
+&lt;th&gt;Out-of-sample Accuracy&lt;/th&gt;
+&lt;th&gt;Formula&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;0.675&lt;/td&gt;
+&lt;td&gt;-1.083815 + 0.4614744 * StrengthPlusWillpower + 0.12259284 * Inkable + 0.6332899 * Lore&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;0.9090909&lt;/td&gt;
+&lt;td&gt;-1.260223 + 0.4845139 * StrengthPlusWillpower + 0.14471860 * Inkable + 0.6446758 * Lore&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;0.8181818&lt;/td&gt;
+&lt;td&gt;-1.145395 + 0.4719321 * StrengthPlusWillpower + 0.13843427 * Inkable + 0.6232257 * Lore&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;0.68&lt;/td&gt;
+&lt;td&gt;-1.147758 + 0.4701966 * StrengthPlusWillpower + 0.14000404 * Inkable + 0.6360544 * Lore&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;0.6086957&lt;/td&gt;
+&lt;td&gt;-1.099656 + 0.4887699 * StrengthPlusWillpower - 0.07309825 * Inkable + 0.6499191 * Lore&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;6&lt;/td&gt;
+&lt;td&gt;0.2083333&lt;/td&gt;
+&lt;td&gt;-1.620512 + 0.4709926 * StrengthPlusWillpower + 0.56866354 * Inkable + 0.6568603 * Lore&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;And for completeness, here is the model with separate Strength and Willpower. As you can see, combining the terms makes sense:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;Model:
+Cost = -1.06870 + 0.46912 * Strength + 0.48427 * Willpower + 0.62117 * Lore
+
+Coefficients:
+            Estimate Std. Error t value Pr(&amp;gt;|t|)    
+(Intercept) -1.06870    0.08937  -11.96   &amp;lt;2e-16 ***
+Strength     0.46912    0.02177   21.55   &amp;lt;2e-16 ***
+Willpower    0.48427    0.01982   24.44   &amp;lt;2e-16 ***
+Lore         0.62117    0.04551   13.65   &amp;lt;2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.42 on 163 degrees of freedom
+Multiple R-squared:  0.9491,    Adjusted R-squared:  0.9482 
+F-statistic:  1014 on 3 and 163 DF,  p-value: &amp;lt; 2.2e-16
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Note that it is still possible for one of Strength or Willpower to actually be more useful than the other. All we have learned is that the game values them identically when determining the Ink cost of a card.&lt;/p&gt;
+&lt;p&gt;So now we have our model, and we know that it is probably about right to say that a point of Strength or Willpower costs 0.48 Ink, and a point of Lore costs 0.62 Ink. What can we do with that?&lt;/p&gt;
+&lt;p&gt;"Residuals" in statistics are the differences between the dependent variable and what the model predicts that it should be. The process of least-squares regression, which is what we have just done, minimizes the sum of the squared residuals.&lt;/p&gt;
+&lt;p&gt;If we assume that the model is accurate, then cards with a negative residual should be "good", and cards with a positive residual should be "bad". What do the residuals look like for this model?&lt;/p&gt;
+&lt;p&gt;&lt;img src="/images/lorcana-pred/basic_residuals.png"/&gt;&lt;/p&gt;
+&lt;p&gt;I think that the main takeaway from this plot is that there are a lot of cards with residuals around -0.5, and those cards are plausibly better than the other basic cards. That also might explain why slightly changing the coefficients of the linear model reduces the accuracy so much, and why holding out Set 5 led to a drop in accuracy. Those cards are so close to -0.5 that putting them on the wrong side of it would tank the accuracy of the model.&lt;/p&gt;
+&lt;p&gt;Now, let's look at the best and worse basic cards.&lt;/p&gt;
+&lt;p&gt;These are the cards that the model considers to be the most underpriced:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Name&lt;/th&gt;
+&lt;th&gt;Cost&lt;/th&gt;
+&lt;th&gt;Strength&lt;/th&gt;
+&lt;th&gt;Willpower&lt;/th&gt;
+&lt;th&gt;Inkable&lt;/th&gt;
+&lt;th&gt;Lore&lt;/th&gt;
+&lt;th&gt;Residual&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Goofy - Knight for a Day&lt;/td&gt;
+&lt;td&gt;9&lt;/td&gt;
+&lt;td&gt;10&lt;/td&gt;
+&lt;td&gt;10&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;-1.9648087&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Sir Ector - Castle Lord&lt;/td&gt;
+&lt;td&gt;7&lt;/td&gt;
+&lt;td&gt;7&lt;/td&gt;
+&lt;td&gt;10&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;-1.9112037&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Scrooge McDuck - Afficionado of Antiquities&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;-0.9488827&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Denahi - Avenging Brother&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;7&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;-0.9032407&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;The first two cards are both very powerful cards with high Strength and high Willpower, so they are not normal cards and it is unsurprising that the model doesn't predict them well.&lt;/p&gt;
+&lt;p&gt;There is an argument that Cost should be proportional to the log of Strength and the log of Willpower, because each incremental Strength and Willpower point is worth less (because it's less likely to ever matter during a game). Then, the marginal Strength and Willpower for these cards would be worth less, and we would predict them better.&lt;/p&gt;
+&lt;p&gt;I don't think it's worth adding that complexity here. It makes it harder to understand the model intuitively, and it only matters for a few cards like these. I want a simple, intuitive model for my purposes.&lt;/p&gt;
+&lt;p&gt;The second two cards I think are just strong cards. They are not Inkable, which provides some balance.&lt;/p&gt;
+&lt;p&gt;These are the cards that the model considers to be the most overpriced:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Name&lt;/th&gt;
+&lt;th&gt;Cost&lt;/th&gt;
+&lt;th&gt;Strength&lt;/th&gt;
+&lt;th&gt;Willpower&lt;/th&gt;
+&lt;th&gt;Inkable&lt;/th&gt;
+&lt;th&gt;Lore&lt;/th&gt;
+&lt;th&gt;Residual&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Pete - Rotten Guy&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;0.9598332&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Sven - Official Ice Deliverer&lt;/td&gt;
+&lt;td&gt;6&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;7&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;0.7188273&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;I think that these cards are just weak. Compare "Pete - Rotten Guy" to "Scrooge McDuck - Afficionado of Antiquities". Scrooge has 4 more strength and only gives up being Inkable. "Nala - Fierce Friend" and "Piglet - Very Small Animal" are both identical to "Pete - Rotten Guy" except for moving points between Strength and Willpower, and they are both Cost 3:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Name&lt;/th&gt;
+&lt;th&gt;Cost&lt;/th&gt;
+&lt;th&gt;Strength&lt;/th&gt;
+&lt;th&gt;Willpower&lt;/th&gt;
+&lt;th&gt;Inkable&lt;/th&gt;
+&lt;th&gt;Lore&lt;/th&gt;
+&lt;th&gt;Residual&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Nala - Fierce Friend&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;-0.04016676&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Piglet - Very Small Animal&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;-0.04016676&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 id="modeling-kwonly-cards"&gt;Modeling kwonly cards&lt;a class="headerlink" href="#modeling-kwonly-cards" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;We want to layer this on top of the model for basic cards. What I'm going to do is first calculate a predicted Basic_Cost for each of the kwonly cards, and then subtract that Basic_Cost from the Cost to get the Keyword_Cost. Our new model will predict the Keyword_Cost and then add parameters for each of the keyword abilities.&lt;/p&gt;
+&lt;p&gt;Some of the keywords take a numeric argument, and that numeric argument is not always exactly the number that is on the card.&lt;/p&gt;
+&lt;p&gt;For Bodyguard, Challenger, and Resist, the numeric argument is the number that is on the card. This makes an assumption that e.g. Challenger +2 is exactly twice as good as Challenger +1. This is probably not completely accurate but it should be right level of detail for us.&lt;/p&gt;
+&lt;p&gt;For Shift and Singer, the numeric argument is based on the difference between the number that is on the card and the Ink cost. Shift and Singer replace the Ink cost in certain situations, so they modify the Ink cost, and a 6 Ink cost card with Shift 4 has a Shift argument of 2 in my model.&lt;/p&gt;
+&lt;p&gt;For Support, the numeric argument is equal to the Strength of the card, because Support adds the card's Strength to another card when it quests.&lt;/p&gt;
+&lt;p&gt;The other keywords--Evasive, Rush, Ward, and Reckless--do not have a numeric argument, so they are binary yes/no parameters.&lt;/p&gt;
+&lt;p&gt;Note that we are again trying to use linear regression for &lt;a href="https://en.wikipedia.org/wiki/Causal_inference"&gt;causal inference&lt;/a&gt;. It is trickier to account for all factors with a more complex model, so your level of confidence in the ability of this model to predict the ink cost of new Lorcana costs should be lower than for the basic model.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;Model:
+Keyword_Cost = 0 +
+               0.39753 * Bodyguard +
+               0.31899 * Shift +
+               0.21841 * Singer +  
+               0.23768 * Support +   
+               1.10404 * Evasive +
+               0.84077 * Rush +
+               0.31541 * Challenger +
+               0.71610 * Ward +
+               0.22977 * Reckless +
+               0.55122 * Resist
+
+Coefficients:
+           Estimate Std. Error t value Pr(&amp;gt;|t|)    
+Bodyguard   0.39753    0.10082   3.943 0.000152 ***
+Shift       0.31899    0.09326   3.420 0.000916 ***
+Singer      0.21841    0.06313   3.459 0.000806 ***
+Support     0.23768    0.03245   7.325 7.08e-11 ***
+Evasive     1.10404    0.07312  15.098  &amp;lt; 2e-16 ***
+Rush        0.84077    0.09275   9.065 1.40e-14 ***
+Challenger  0.31541    0.05182   6.087 2.30e-08 ***
+Ward        0.71610    0.10762   6.654 1.70e-09 ***
+Reckless    0.22977    0.13030   1.763 0.080992 .  
+Resist      0.55122    0.15183   3.631 0.000454 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.3627 on 97 degrees of freedom
+Multiple R-squared:  0.8646,    Adjusted R-squared:  0.8507 
+F-statistic: 61.96 on 10 and 97 DF,  p-value: &amp;lt; 2.2e-16
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Why is Reckless positive despite clearly being a debuff? I think that Reckless cards are priced under the assumption that they have a single Lore that they can't use. If we assume that Reckless cards implicitly have 1 Lore, then the new coefficient for Reckless is the old coefficient for Reckless minus the coefficient for Lore, which gives us &lt;code&gt;0.22977 - 0.62207 = -0.3923&lt;/code&gt;, which I think is a fair estimate for the cost of Reckless. I don't think I agree with the way that Reckless cards are priced.&lt;/p&gt;
+&lt;p&gt;I don't have much to say about the other keywords except that the coefficients look right to me.&lt;/p&gt;
+&lt;p&gt;I will say that I also tried treating Inkability as a keyword, to see if its coefficient would be significantly non-zero. This would be justified if it were the case that Inkability mattered more for kwonly cards than for basic cards, such that Inkability was noise for basic cards but was useful signal for kwonly cards. This is a plausible theory, so let's see:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;Model:
+Keyword_Cost = 0 +
+               0.02487 * Inkable +
+               0.39753 * Bodyguard +
+               0.31899 * Shift +
+               0.21841 * Singer +  
+               0.23768 * Support +   
+               1.10404 * Evasive +
+               0.84077 * Rush +
+               0.31541 * Challenger +
+               0.71610 * Ward +
+               0.22977 * Reckless +
+               0.55122 * Resist
+
+Coefficients:
+            Estimate Std. Error t value Pr(&amp;gt;|t|)    
+Inkable      0.02487    0.08327   0.299 0.765841    
+Bodyguard    0.37801    0.12054   3.136 0.002274 ** 
+Shift        0.32207    0.09427   3.417 0.000931 ***
+Singer       0.20710    0.07387   2.804 0.006113 ** 
+Support      0.23073    0.04005   5.761 1.01e-07 ***
+Evasive      1.08370    0.10018  10.818  &amp;lt; 2e-16 ***
+Rush         0.83970    0.09326   9.004 2.05e-14 ***
+Challenger   0.30911    0.05616   5.504 3.09e-07 ***
+Ward         0.69634    0.12676   5.493 3.23e-07 ***
+Reckless     0.22071    0.13439   1.642 0.103780    
+Resist       0.53700    0.15980   3.360 0.001118 ** 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.3644 on 96 degrees of freedom
+Multiple R-squared:  0.8648,    Adjusted R-squared:  0.8493 
+F-statistic: 55.81 on 11 and 96 DF,  p-value: &amp;lt; 2.2e-16
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The Inkable parameter has a coefficient of 0.02, and that coefficient is not significantly-nonzero. So we will not include Inkability in our kwonly model.&lt;/p&gt;
+&lt;p&gt;While we're at it, notice that my kwonly model forces an Intercept coefficient of 0. This makes sense because a card with zero keywords should have zero Keyword_Cost, because it is actually a basic card. If we added an Intercept coefficient, would it be significantly-nonzero? We hope that it will not be:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;Model:
+Keyword_Cost = 0.10741 +
+               0.30946 * Bodyguard +
+               0.32745 * Shift +
+               0.16958 * Singer +  
+               0.20479 * Support +   
+               1.00360 * Evasive +
+               0.75717 * Rush +
+               0.27961 * Challenger +
+               0.61480 * Ward +
+               0.14326 * Reckless +
+               0.47317 * Resist
+
+Coefficients:
+              Estimate Std. Error t value Pr(&amp;gt;|t|)    
+(Intercept)    0.10741    0.11369   0.945 0.347187    
+Bodyguard      0.30946    0.13735   2.253 0.026534 *  
+Shift          0.32745    0.09374   3.493 0.000724 ***
+Singer         0.16958    0.08161   2.078 0.040390 *  
+Support        0.20479    0.04760   4.302 4.07e-05 ***
+Evasive        1.00360    0.12906   7.776 8.44e-12 ***
+Rush           0.75717    0.12824   5.905 5.34e-08 ***
+Challenger     0.27961    0.06422   4.354 3.34e-05 ***
+Ward           0.61480    0.15196   4.046 0.000106 ***
+Reckless       0.14326    0.15932   0.899 0.370784    
+Resist         0.47317    0.17292   2.736 0.007403 ** 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.3629 on 96 degrees of freedom
+Multiple R-squared:  0.5383,    Adjusted R-squared:  0.4902 
+F-statistic: 11.19 on 10 and 96 DF,  p-value: 1.889e-12
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The Intercept term has a coefficient of 0.11, and it is not significantly-nonzero, which is what we had hoped for.&lt;/p&gt;
+&lt;p&gt;Back to the original kwonly model. Again, we'll look at the residuals:&lt;/p&gt;
+&lt;p&gt;&lt;img src="/images/lorcana-pred/kwonly_residuals.png"/&gt;&lt;/p&gt;
+&lt;p&gt;Thankfully, the error rate is still pretty good, at 84%. We should however be intuitively less confident in the exact values of these parameters because we are training a more complex model on proportionally less data, and because it is more likely that we are missing factors, because the keyword effects are complex.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Held-out Set&lt;/th&gt;
+&lt;th&gt;Out-of-sample Accuracy&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;0.7619048&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;0.9444444&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;0.8&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;0.8235294&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;0.8125&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;6&lt;/td&gt;
+&lt;td&gt;0.9333333&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Keyword&lt;/th&gt;
+&lt;th&gt;Min value over all held-out sets&lt;/th&gt;
+&lt;th&gt;Max value over all held-out sets&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Bodyguard&lt;/td&gt;
+&lt;td&gt;0.3231928&lt;/td&gt;
+&lt;td&gt;0.4389048&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Shift&lt;/td&gt;
+&lt;td&gt;0.2347090&lt;/td&gt;
+&lt;td&gt;0.3682603&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Singer&lt;/td&gt;
+&lt;td&gt;0.2104870&lt;/td&gt;
+&lt;td&gt;0.2406689&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Support&lt;/td&gt;
+&lt;td&gt;0.2008330&lt;/td&gt;
+&lt;td&gt;0.2661130&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Evasive&lt;/td&gt;
+&lt;td&gt;0.9838881&lt;/td&gt;
+&lt;td&gt;1.1575138&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Rush&lt;/td&gt;
+&lt;td&gt;0.7482291&lt;/td&gt;
+&lt;td&gt;0.8809805&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Challenger&lt;/td&gt;
+&lt;td&gt;0.2790733&lt;/td&gt;
+&lt;td&gt;0.3461545&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Ward&lt;/td&gt;
+&lt;td&gt;0.6659889&lt;/td&gt;
+&lt;td&gt;0.7480462&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Reckless&lt;/td&gt;
+&lt;td&gt;0.1444510&lt;/td&gt;
+&lt;td&gt;0.3086036&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Resist&lt;/td&gt;
+&lt;td&gt;0.4337512&lt;/td&gt;
+&lt;td&gt;0.6885117&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Cross-validation also confirms that the kwonly model works well enough.&lt;/p&gt;
+&lt;p&gt;These are the cards that the model considers to be the most underpriced:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Name&lt;/th&gt;
+&lt;th&gt;Cost&lt;/th&gt;
+&lt;th&gt;Strength&lt;/th&gt;
+&lt;th&gt;Willpower&lt;/th&gt;
+&lt;th&gt;Inkable&lt;/th&gt;
+&lt;th&gt;Lore&lt;/th&gt;
+&lt;th&gt;Keywords&lt;/th&gt;
+&lt;th&gt;Residual&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Captain Hook - Forceful Duelist&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;Challenger 2&lt;/td&gt;
+&lt;td&gt;-0.6173778&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Pegasus - Gift for Hercules&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;Evasive&lt;/td&gt;
+&lt;td&gt;-0.6134227&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Yeah, these ones just seem generally good. An evasive 1-drop can immediately start racking up lore and probably can't be countered for a few turns. And the Challenger 2 is already on top of a good card.&lt;/p&gt;
+&lt;p&gt;These are the cards that the model considers to be the most overpriced:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Name&lt;/th&gt;
+&lt;th&gt;Cost&lt;/th&gt;
+&lt;th&gt;Strength&lt;/th&gt;
+&lt;th&gt;Willpower&lt;/th&gt;
+&lt;th&gt;Inkable&lt;/th&gt;
+&lt;th&gt;Lore&lt;/th&gt;
+&lt;th&gt;Keywords&lt;/th&gt;
+&lt;th&gt;Residual&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Chief Tui - Respected Leader&lt;/td&gt;
+&lt;td&gt;7&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;6&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;Support&lt;/td&gt;
+&lt;td&gt;1.1931914&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Tigger - Wonderful Thing&lt;/td&gt;
+&lt;td&gt;6&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;Evasive&lt;/td&gt;
+&lt;td&gt;0.9014353&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;For both of these, it seems like you're just overpaying for the ability that you get. I think that these are just generally bad cards.&lt;/p&gt;
+&lt;p&gt;This is reassuring. We had some obvious outliers on the basic cards, although to be fair they were very weird basic cards, but the most extreme kwonly cards all seem reasonable.&lt;/p&gt;
+&lt;h2 id="not-modeling-bespoke-cards"&gt;Not modeling bespoke cards&lt;a class="headerlink" href="#not-modeling-bespoke-cards" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Now we move onto cards with bespoke abilities.&lt;/p&gt;
+&lt;p&gt;Note that we're doing something different here from what we have been doing. For basic and kwonly cards, we designed the formula for a model, trained a linear model using that formula, validated that the model was reasonable, predicted a cost for each card using that model, and evaluated whether the card was "good" by the value of the residual. Negative residuals were good, because it meant that the actual cost of the card was below what we predicted it would be, which meant that the card was undervalued according to our model. Positive residuals were bad, because it meant that the card was overvalued according to our model.&lt;/p&gt;
+&lt;p&gt;Here, we are not training a model, because I do not have a design for what the formula would look like, because there are many different bespoke abilities that combine effects in various ways, and the whole thing seems very complicated.&lt;/p&gt;
+&lt;p&gt;Instead, we are predicting the cost of the card as if it were a kwonly card, taking that value to be the true cost of the bespoke card if it didn't have any bespoke abilities, and then saying that the value of the bespoke abilities is the actual cost of the card minus the predicted cost of the card as a kwonly card.&lt;/p&gt;
+&lt;p&gt;So for this part a positive Bespoke_Cost means that the bespoke abilities are beneficial, and make a card cost more, and a negative Bespoke_Cost means that the bespoke abilities are detrimental, and make a card cost less.&lt;/p&gt;
+&lt;p&gt;The Bespoke_Cost has error bars that are at least as wide as the error bars from the kwonly model. So we should expect the Bespoke_Costs to be +/- 0.5 or even more than that.&lt;/p&gt;
+&lt;p&gt;We can't really do anything else without a model, but I think that just looking at the bespoke costs of various abilities is enough to find some interesting stuff.&lt;/p&gt;
+&lt;p&gt;These are the cards whose bespoke abilities the model considers to be the most beneficial:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Name&lt;/th&gt;
+&lt;th&gt;Bespoke Cost&lt;/th&gt;
+&lt;th&gt;Bespoke Abilities&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Kristoff - Reindeer Keeper&lt;/td&gt;
+&lt;td&gt;4.275658&lt;/td&gt;
+&lt;td&gt;Song of the Herd - For each song card in your discard, you pay 1 Ink less to play this character.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Mickey Mouse - Trumpeter&lt;/td&gt;
+&lt;td&gt;3.967796&lt;/td&gt;
+&lt;td&gt;Sound The Call - {e}, 2{i}: Play a character for free.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Magic Broom - Dancing Duster&lt;/td&gt;
+&lt;td&gt;3.581901&lt;/td&gt;
+&lt;td&gt;Power Clean - When you play this character, if you have a Sorcerer character in play, you may exert chosen opposing character. They can't ready at the start of their next turn.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Lady Tremaine - Wicked Stepmother&lt;/td&gt;
+&lt;td&gt;3.581901&lt;/td&gt;
+&lt;td&gt;Do It Again! - When you play this character, you may return an action card from your discard to your hand.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Maleficent - Monstrous Dragon&lt;/td&gt;
+&lt;td&gt;3.096759&lt;/td&gt;
+&lt;td&gt;Dragon Fire - When you play this character, you may banish chosen character.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Lucifer - Cunning Cat&lt;/td&gt;
+&lt;td&gt;2.914191&lt;/td&gt;
+&lt;td&gt;Mouse Catcher: When you play this character, each opponent chooses and discards either 2 cards or 1 action card.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Peter Pan - Never Land Prankster&lt;/td&gt;
+&lt;td&gt;2.673185&lt;/td&gt;
+&lt;td&gt;Look Innocent - This character enters play exerted. Can't Take a Joke? - While this character is exerted, each opposing player can't gain lore unless one of their characters has challenged this turn.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Magica De Spell - The Midas Touch&lt;/td&gt;
+&lt;td&gt;2.657271&lt;/td&gt;
+&lt;td&gt;All Mine - Whenever this character quests, gain lore equal to the cost of one of your items in play.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Madame Medusa - The Boss&lt;/td&gt;
+&lt;td&gt;2.627543&lt;/td&gt;
+&lt;td&gt;That Terrible Woman - When you play this character, banish chosen opposing character with 3{s} or less.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Pepa Madrigal - Weather Maker&lt;/td&gt;
+&lt;td&gt;2.581901&lt;/td&gt;
+&lt;td&gt;It Looks Like Rain - When you play this character, you may exert chosen opposing character. That character can't ready at the start of their next turn unless they're at a location.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;These are the cards whose bespoke abilities the model considers to be the most detrimental:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Name&lt;/th&gt;
+&lt;th&gt;Bespoke Cost&lt;/th&gt;
+&lt;th&gt;Bespoke Abilities&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Gustav the Giant - Terror of the Kingdom&lt;/td&gt;
+&lt;td&gt;-2.281173&lt;/td&gt;
+&lt;td&gt;All Tied Up - This character enters play exerted and can't ready at the start of your turn. Break Free - During your turn, whenever one of your other characters banishes another character in a challenge, you may ready this character.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Treasure Guardian - Protector of the Cave&lt;/td&gt;
+&lt;td&gt;-1.903241&lt;/td&gt;
+&lt;td&gt;Who Disturbs My Slumber? - This character can't challenge or quest unless it is at a location.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Mirabel Madrigal - Family Gatherer&lt;/td&gt;
+&lt;td&gt;-1.815087&lt;/td&gt;
+&lt;td&gt;Not Without My Family - You can't play this character unless you have 5 or more characters in play.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Daisy Duck - Donald's Date&lt;/td&gt;
+&lt;td&gt;-1.562988&lt;/td&gt;
+&lt;td&gt;Big Prize - Whenever this character quests, each opponent reveals the top card of their deck. If it's a character card, they may put it into their hand. Otherwise, they put it on the bottom of their deck.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Golden Harp - Enchanter of the Land&lt;/td&gt;
+&lt;td&gt;-1.562988&lt;/td&gt;
+&lt;td&gt;Stolen Away - At the end of your turn, if you didn't play a song this turn, banish this character.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Flynn Rider - His Own Biggest Fan&lt;/td&gt;
+&lt;td&gt;-1.549146&lt;/td&gt;
+&lt;td&gt;One Last, Big Score - This character gets -1 Lore for each card in your opponents' hands.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Megara - Captivating Cynic&lt;/td&gt;
+&lt;td&gt;-1.471704&lt;/td&gt;
+&lt;td&gt;Shady Deal - When you play this character, choose and discard a card or banish this character.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Madam Mim - Purple Dragon&lt;/td&gt;
+&lt;td&gt;-1.251417&lt;/td&gt;
+&lt;td&gt;I win, I win! - When you play this character, banish her or return another 2 chosen characters of yours to your hand.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Mr. Smee - Bumbling Mate&lt;/td&gt;
+&lt;td&gt;-1.040167&lt;/td&gt;
+&lt;td&gt;Oh Dear, Dear, Dear - At the end of your turn, if this character is exerted and you don't have a Captain character in play, deal 1 damage to this character.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Beast - Wounded&lt;/td&gt;
+&lt;td&gt;-0.994525&lt;/td&gt;
+&lt;td&gt;That Hurts!: This character enters play with 4 damage.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;I think that it's probably reasonable to assume +/- 0.5 ink error bars on the values of these abilities, given that that's mostly what we saw on the other categories of cards. But that's based on nothing and +/- 1 ink error bars would certainly be safer.&lt;/p&gt;
+&lt;p&gt;Dragon Fire costs 3.10 as a bespoke ability, but 5 as an action card, so you get a hefty discount for combining the character and the action. Of course, "Maleficient - Monstrous Dragon" is a 9-drop card, so you can only use the ability in the endgame, and the character is not a full replacement for the separate action card.&lt;/p&gt;
+&lt;p&gt;If we assume that the two Dragon Fires are well-balanced, then we have learned that the game values a 5 Ink action card at 3 Ink when paired with a 6-drop card. That is interesting insight that it would have been difficult to find out any other way.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Name&lt;/th&gt;
+&lt;th&gt;Bespoke Cost&lt;/th&gt;
+&lt;th&gt;Bespoke Abilities&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Magic Broom - Dancing Duster&lt;/td&gt;
+&lt;td&gt;3.581901&lt;/td&gt;
+&lt;td&gt;Power Clean - When you play this character, if you have a Sorcerer character in play, you may exert chosen opposing character. They can't ready at the start of their next turn.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Elsa - Spirit of Winter&lt;/td&gt;
+&lt;td&gt;1.791067&lt;/td&gt;
+&lt;td&gt;Deep Freeze - When you play this character, exert up to 2 chosen characters. They can't ready at the start of their next turn.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;"Elsa - Spirit of Winter" can exert two characters and keep them from readying at the start of their next turn for a bespoke cost of 1.79 ink, whereas "Magic Broom - Dancing Duster" does something strictly worse (one character, with a condition) for a bespoke cost of 3.58.&lt;/p&gt;
+&lt;p&gt;This makes Elsa's ability roughly four times as valuable as Magic Broom's. Both of these are Amethyst cards, why are the abilities valued so differently? Part of the answer is surely that Elsa is an 8-drop card, and abilities seem to be cheaper when paired with high cost cards, but surely that doesn't explain everything. There's a reason that Elsa is expensive in dollars and Magic Broom is cheap in dollars, after all.&lt;/p&gt;
+&lt;p&gt;I am sure that there are other interesting observations that can be made, but I will leave them to readers to find.&lt;/p&gt;
+&lt;p&gt;&lt;img src="/images/lorcana-pred/bespoke_bespoke_costs.png"/&gt;&lt;/p&gt;
+&lt;p&gt;Remember, this plot shows the costs of bespoke abilities, not residuals. What we learn from this plot is that most bespoke abilities are positive, and the most extreme positive abilities are more extreme than the most extreme negative abilities.&lt;/p&gt;
+&lt;h1 id="analyzing-meta-relevant-cards"&gt;Analyzing meta-relevant cards&lt;a class="headerlink" href="#analyzing-meta-relevant-cards" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h1&gt;
+&lt;p&gt;Another way to evaluate whether our models are useful is to see if they predict whether a card is used in meta decks at competitive tournaments. We want to know if the residuals for cards used in meta decks are drawn from a different distribution from the residuals for card not used in meta decks. "Drawn from a different distribution" is a technical way of saying that two populations are "different" in statistics.&lt;/p&gt;
+&lt;p&gt;At the same time, we'll check whether Inkability affects if a card gets chosen for meta decks, by seeing whether the proportion of Inkable meta-relevant cards is different from the proportion of Inkable non-meta-relevant cards.&lt;/p&gt;
+&lt;p&gt;Both of these questions are best answered by statistical tests. For checking whether the residuals are drawn from different distributions, we will use the &lt;a href="https://en.wikipedia.org/wiki/Kruskal%E2%80%93Wallis_test"&gt;Kruskal-Wallis rank sum test&lt;/a&gt;, which is convenient for us because it does not make many assumptions about the form of our data (unlike &lt;a href="https://en.wikipedia.org/wiki/Analysis_of_variance"&gt;ANOVA&lt;/a&gt;). For checking whether the Inkability proportions are different, we will use the &lt;a href="https://en.wikipedia.org/wiki/Fisher%27s_exact_test"&gt;Fisher's exact test&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;The important thing to know about these tests is that they will give us back a p-value, which is the probability of seeing this result (or a more extreme result) assuming that the distributions, or proportions, are in fact the same, which is the null hypothesis. We will reject the null hypothesis if the p-value fall below 0.05, as is customary.&lt;/p&gt;
+&lt;h2 id="meta-deck-data"&gt;Meta deck data&lt;a class="headerlink" href="#meta-deck-data" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;&lt;a href="/files/lorcana-pred/lorcana_meta_cards.csv"&gt;Here&lt;/a&gt; is a CSV file for the list of meta-relevant cards and the meta archetypes that use them. This CSV includes all cards, not just character cards.&lt;/p&gt;
+&lt;p&gt;I looked at every "Tier 1" and "Tier 2" meta archetype on inkdecks on 2025/02/19, which is every archetype with at least a 5% metashare, and cumulatively 83% metashare. Then, I picked every card listed as a "Key Card", as well as any card that was present in at least 20% of decks within the archetype. I consider this the set of "meta-relevant" cards.&lt;/p&gt;
+&lt;h2 id="meta-basic-cards"&gt;Meta basic cards&lt;a class="headerlink" href="#meta-basic-cards" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;This is the full list of meta-relevant basic cards:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Name&lt;/th&gt;
+&lt;th&gt;Cost&lt;/th&gt;
+&lt;th&gt;Strength&lt;/th&gt;
+&lt;th&gt;Willpower&lt;/th&gt;
+&lt;th&gt;Inkable&lt;/th&gt;
+&lt;th&gt;Lore&lt;/th&gt;
+&lt;th&gt;Residual&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Gantu - Captain Crankyhead&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;0.2385182&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Maleficent - Biding Her Time&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;-0.1314508&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Robin Hood - Beloved Outlaw&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;-0.4637408&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;The Queen - Regal Monarch&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;-0.4637408&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Olaf - Friendly Snowman&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;-0.4637408&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Minnie Mouse - Always Classy&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;-0.4637408&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Banzai - Gluttonous Predator&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;-0.5629878&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;    Kruskal-Wallis rank sum test
+
+data: Basic Meta residuals, Basic Non-Meta residuals
+Kruskal-Wallis chi-squared = 6.1908, df = 1, p-value = 0.01284
+
+Basic Meta Mean: -0.3301262
+Basic Non-Meta Mean: 0.01444302
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Yes, the residuals from the basic meta cards are drawn from a distribution with a different mean from the residuals from the basic non-meta cards, at a significant level.&lt;/p&gt;
+&lt;p&gt;This gives us some confidence that the basic model is useful for finding genuinely good cards.&lt;/p&gt;
+&lt;p&gt;This is the contingency table for the Fisher's exact test:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Is Meta?&lt;/th&gt;
+&lt;th&gt;Non-Inkable&lt;/th&gt;
+&lt;th&gt;Inkable&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;31&lt;/td&gt;
+&lt;td&gt;129&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;    Fisher&amp;#39;s Exact Test for Count Data
+
+data:  Basic cards contingency table
+p-value = 0.1501
+alternative hypothesis: true odds ratio is not equal to 1
+95 percent confidence interval:
+  0.4311601 19.3221385
+sample estimates:
+odds ratio 
+  3.093437 
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Inconclusive. If anything, non-Inkable cards are more likely to be picked.&lt;/p&gt;
+&lt;h2 id="meta-kwonly-cards"&gt;Meta kwonly cards&lt;a class="headerlink" href="#meta-kwonly-cards" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;This is the full list of meta-relevant kwonly cards:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Name&lt;/th&gt;
+&lt;th&gt;Cost&lt;/th&gt;
+&lt;th&gt;Strength&lt;/th&gt;
+&lt;th&gt;Willpower&lt;/th&gt;
+&lt;th&gt;Inkable&lt;/th&gt;
+&lt;th&gt;Lore&lt;/th&gt;
+&lt;th&gt;Keywords&lt;/th&gt;
+&lt;th&gt;Residual&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Minnie Mouse - Stylish Surfer&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;Evasive,&lt;/td&gt;
+&lt;td&gt;-0.1898487&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Chien-Po - Imperial Soldier&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;7&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;Bodyguard,&lt;/td&gt;
+&lt;td&gt;-0.2015211&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;HeiHei - Boat Snack&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;Support,&lt;/td&gt;
+&lt;td&gt;-0.2242407&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Maui - Hero to All&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;6&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;td&gt;Rush, Reckless,&lt;/td&gt;
+&lt;td&gt;-0.2524709&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Queen Of Hearts - Impulsive Ruler&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;Rush,&lt;/td&gt;
+&lt;td&gt;-0.3045157&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Ursula - Vanessa&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;Singer4,&lt;/td&gt;
+&lt;td&gt;-0.3777319&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Cinderella - Ballroom Sensation&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;Singer3,&lt;/td&gt;
+&lt;td&gt;-0.4233739&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Sir Hiss - Aggravating Asp&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;Evasive,&lt;/td&gt;
+&lt;td&gt;-0.5677807&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Pegasus - Gift for Hercules&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;Evasive,&lt;/td&gt;
+&lt;td&gt;-0.6134227&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;I also want to take the time to note that there is only one Reckless meta-relevant card:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Name&lt;/th&gt;
+&lt;th&gt;Cost&lt;/th&gt;
+&lt;th&gt;Strength&lt;/th&gt;
+&lt;th&gt;Willpower&lt;/th&gt;
+&lt;th&gt;Inkable&lt;/th&gt;
+&lt;th&gt;Lore&lt;/th&gt;
+&lt;th&gt;Keywords&lt;/th&gt;
+&lt;th&gt;Residual&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Maui - Hero to All&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;6&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;td&gt;Rush, Reckless,&lt;/td&gt;
+&lt;td&gt;-0.2524709&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Why is "Maui - Hero to All" used? It's the highest strength Inkable Rush card available to Ruby. If we gave Reckless the coefficient that I feel it should have then it would have a slightly positive residual of 0.37, which still isn't terrible.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Name&lt;/th&gt;
+&lt;th&gt;Cost&lt;/th&gt;
+&lt;th&gt;Strength&lt;/th&gt;
+&lt;th&gt;Willpower&lt;/th&gt;
+&lt;th&gt;Inkable&lt;/th&gt;
+&lt;th&gt;Lore&lt;/th&gt;
+&lt;th&gt;Keywords&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Kakamora - Boarding Party&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;Rush,&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Goofy - Flying Goof&lt;/td&gt;
+&lt;td&gt;6&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;Evasive, Rush,&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Maui - Hero to All&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;6&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;td&gt;Rush, Reckless,&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Hercules - Daring Demigod&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;7&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;td&gt;Rush, Reckless,&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;If we look at the other Reckless cards, we find that all of them are positive residuals if we consider the true cost of Reckless, except for one other card:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Name&lt;/th&gt;
+&lt;th&gt;Cost&lt;/th&gt;
+&lt;th&gt;Strength&lt;/th&gt;
+&lt;th&gt;Willpower&lt;/th&gt;
+&lt;th&gt;Inkable&lt;/th&gt;
+&lt;th&gt;Lore&lt;/th&gt;
+&lt;th&gt;Keywords&lt;/th&gt;
+&lt;th&gt;Residual&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Tuk Tuk - Wrecking Ball&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;td&gt;Reckless,&lt;/td&gt;
+&lt;td&gt;0.54266212&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Hercules - Daring Demigod&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;7&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;td&gt;Rush, Reckless,&lt;/td&gt;
+&lt;td&gt;0.22470815&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Te Ka - The Burning One&lt;/td&gt;
+&lt;td&gt;6&lt;/td&gt;
+&lt;td&gt;8&lt;/td&gt;
+&lt;td&gt;6&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;td&gt;Reckless,&lt;/td&gt;
+&lt;td&gt;0.15676714&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Della Duck - Unstoppable Mom&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;td&gt;Reckless,&lt;/td&gt;
+&lt;td&gt;-0.02580089&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Gaston - Arrogant Hunter&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;td&gt;Reckless,&lt;/td&gt;
+&lt;td&gt;-0.02580089&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Felicia - Always Hungry&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;td&gt;Reckless,&lt;/td&gt;
+&lt;td&gt;-0.07144290&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Maui - Hero to All&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;6&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;td&gt;Rush, Reckless,&lt;/td&gt;
+&lt;td&gt;-0.25247085&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Arthur - Novice Sparrow&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;td&gt;Reckless,&lt;/td&gt;
+&lt;td&gt;-0.54862189&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;"Arthur - Novice Sparrow" seems like it could also be a solid choice. It isn't Inkable, though.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;    Kruskal-Wallis rank sum test
+
+data:  kwonly Meta Residuals, kwonly Non-Meta Residuals
+Kruskal-Wallis chi-squared = 12.822, df = 1, p-value = 0.0003425
+
+kwonly Meta Mean: -0.3505451
+kwonly Non-Meta Mean: 0.04335732
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Yes, the residuals from the kwonly meta cards are drawn from a distribution with a different mean from the residuals from the kwonly non-meta cards, at a significant level.&lt;/p&gt;
+&lt;p&gt;This gives us some confidence that the kwonly model is useful for finding genuinely good cards.&lt;/p&gt;
+&lt;p&gt;This is the contingency table for the Fisher's exact test:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Is Meta?&lt;/th&gt;
+&lt;th&gt;Non-Inkable&lt;/th&gt;
+&lt;th&gt;Inkable&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;td&gt;9&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;27&lt;/td&gt;
+&lt;td&gt;71&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;    Fisher&amp;#39;s Exact Test for Count Data
+
+data:  Keyword-only contingency table
+p-value = 0.1079
+alternative hypothesis: true odds ratio is not equal to 1
+95 percent confidence interval:
+ 0.000000 1.446478
+sample estimates:
+odds ratio 
+         0 
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Inconclusive, but Inkable cards are more likely to be picked.&lt;/p&gt;
+&lt;h2 id="meta-bespoke-cards"&gt;Meta bespoke cards&lt;a class="headerlink" href="#meta-bespoke-cards" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;This is the full list of meta-relevant bespoke cards:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Name&lt;/th&gt;
+&lt;th&gt;Cost&lt;/th&gt;
+&lt;th&gt;Strength&lt;/th&gt;
+&lt;th&gt;Willpower&lt;/th&gt;
+&lt;th&gt;Inkable&lt;/th&gt;
+&lt;th&gt;Lore&lt;/th&gt;
+&lt;th&gt;Keywords&lt;/th&gt;
+&lt;th&gt;Bespoke Cost&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Madame Medusa - The Boss&lt;/td&gt;
+&lt;td&gt;6&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;2.62754326&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Hades - Infernal Schemer&lt;/td&gt;
+&lt;td&gt;7&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;6&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;2.52829625&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Sisu - Empowered Sibling&lt;/td&gt;
+&lt;td&gt;8&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;Shift 6,&lt;/td&gt;
+&lt;td&gt;2.26824555&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Tamatoa - So Shiny!&lt;/td&gt;
+&lt;td&gt;8&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;8&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;2.24164828&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Merlin - Rabbit&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;2.05908025&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Lady Tremaine - Imperious Queen&lt;/td&gt;
+&lt;td&gt;6&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;Shift 4,&lt;/td&gt;
+&lt;td&gt;1.84467156&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Elsa - Spirit of Winter&lt;/td&gt;
+&lt;td&gt;8&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;6&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;Shift 6,&lt;/td&gt;
+&lt;td&gt;1.79106655&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Hades - King of Olympus&lt;/td&gt;
+&lt;td&gt;8&lt;/td&gt;
+&lt;td&gt;6&lt;/td&gt;
+&lt;td&gt;7&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;Shift 6,&lt;/td&gt;
+&lt;td&gt;1.60366559&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Gramma Tala - Keeper of Ancient Stories&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;1.58190125&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Belle - Strange but special&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;1.58190125&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Kit Cloudkicker - Tough Guy&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;1.53625924&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Maleficent - Sorceress&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;1.53625924&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Pinocchio - Talkative Puppet&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;1.49061724&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Donald Duck - Focused Flatfoot&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;1.48265424&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Sisu - Daring Visitor&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;Evasive,&lt;/td&gt;
+&lt;td&gt;1.38657730&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Yzma - Scary Beyond All Reason&lt;/td&gt;
+&lt;td&gt;6&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;Shift 4,&lt;/td&gt;
+&lt;td&gt;1.36749256&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Pluto - Guard Dog&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;Bodyguard,&lt;/td&gt;
+&lt;td&gt;1.18437386&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Ariel - Treasure Collector&lt;/td&gt;
+&lt;td&gt;6&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;Ward,&lt;/td&gt;
+&lt;td&gt;1.14448689&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Merlin - Goat&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;1.10472225&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Hiram Flaversham - Toymaker&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;6&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;1.10472225&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Ursula - Deceiver of All&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;1.05908025&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Morph - Space Goo&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;1.01343824&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Kuzco - Wanted Llama&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;1.01343824&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Tipo - Growing Son&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;1.01343824&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Beast - Hardheaded&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;1.00547524&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Diablo - Obedient Raven&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;0.96779623&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Friar Tuck - Priest of Nottingham&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;0.95983324&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Sven - Reindeer Steed&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;0.95983324&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Clarabelle - Light on Her Hooves&lt;/td&gt;
+&lt;td&gt;7&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;6&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;Shift 5,&lt;/td&gt;
+&lt;td&gt;0.93595557&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Lawrence - Jealous Manservant&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;0.91419123&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Tinker Bell - Giant Fairy&lt;/td&gt;
+&lt;td&gt;6&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;Shift 4,&lt;/td&gt;
+&lt;td&gt;0.89031356&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;The Muses - Proclaimers of Heroes&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;Ward,&lt;/td&gt;
+&lt;td&gt;0.86580192&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Goofy - Musketeer&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;6&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;Bodyguard,&lt;/td&gt;
+&lt;td&gt;0.75283687&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Gaston - Intellectual Powerhouse&lt;/td&gt;
+&lt;td&gt;6&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;Shift 4,&lt;/td&gt;
+&lt;td&gt;0.74542455&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Scar - Vicious Cheater&lt;/td&gt;
+&lt;td&gt;7&lt;/td&gt;
+&lt;td&gt;6&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;Rush,&lt;/td&gt;
+&lt;td&gt;0.73316327&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Prince John - Greediest of All&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;Ward,&lt;/td&gt;
+&lt;td&gt;0.67527089&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Ariel - Spectacular Singer&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;Singer5,&lt;/td&gt;
+&lt;td&gt;0.62226809&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;The White Rose - Jewel of the Garden&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;0.58190125&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;John Silver - Ship's Cook&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;0.58190125&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Lyle Tiberius Rourke - Cunning Mercenary&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;0.58190125&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Merlin - Crab&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;0.58190125&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Pete - Games Referee&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;0.58190125&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Piglet - Pooh Pirate Captain&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;0.53625924&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Ursula - Deceiver&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;0.53625924&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Doc - Bold Knight&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;0.53625924&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Flynn Rider - Frenemy&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;0.53625924&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;The Queen - Commanding Presence&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;Shift 2,&lt;/td&gt;
+&lt;td&gt;0.52568021&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Prince Naveen - Ukulele Player&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;Singer6,&lt;/td&gt;
+&lt;td&gt;0.52302108&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Judy Hopps - Optimistic Officer&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;0.43701223&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Benja - Guardian of the Dragon Gem&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;0.43701223&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Anna - Diplomatic Queen&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;0.43701223&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Sisu - Emboldened Warrior&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;0.43701223&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Diablo - Devoted Herald&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;Evasive,&lt;/td&gt;
+&lt;td&gt;0.43221931&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Lilo - Escape Artist&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;0.39137023&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Lefou - Bumbler&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;0.39137023&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Flynn Rider - Charming Rogue&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;0.39137023&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Kida - Protector of Atlantis&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;Shift 3,&lt;/td&gt;
+&lt;td&gt;0.36749256&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Beast - Tragic Hero&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;Shift 3,&lt;/td&gt;
+&lt;td&gt;0.36749256&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Belle - Accomplished Mystic&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;Shift 3,&lt;/td&gt;
+&lt;td&gt;0.36749256&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Cursed Merfolk - Ursula's Handiwork&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;0.34572822&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Ursula - Sea Witch Queen&lt;/td&gt;
+&lt;td&gt;7&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;7&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;Shift 5,&lt;/td&gt;
+&lt;td&gt;0.31388756&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Elsa - The Fifth Spirit&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;Evasive, Rush,&lt;/td&gt;
+&lt;td&gt;0.15990734&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Cogsworth - Grandfather Clock&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;Shift 3, Ward,&lt;/td&gt;
+&lt;td&gt;0.12857222&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Chernabog's Followers - Creatures of Evil&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;0.01343824&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Clarabelle - Clumsy Guest&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;0.01343824&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Happy - Lively Knight&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;0.01343824&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Magic Broom - Illuminary Keeper&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;0.01343824&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Diablo - Maleficent's Spy&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;0.01343824&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Robin Hood - Champion of Sherwood&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;6&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;Shift 3,&lt;/td&gt;
+&lt;td&gt;-0.10968644&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Genie - Wish Fulfilled&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;Evasive,&lt;/td&gt;
+&lt;td&gt;-0.14420669&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Maui - Half-Shark&lt;/td&gt;
+&lt;td&gt;6&lt;/td&gt;
+&lt;td&gt;7&lt;/td&gt;
+&lt;td&gt;5&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;Evasive,&lt;/td&gt;
+&lt;td&gt;-0.38521266&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Madam Mim - Snake&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;-0.41809875&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Rafiki - Mystical Fighter&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;Challenger 3,&lt;/td&gt;
+&lt;td&gt;-0.45560686&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Calhoun - Marine Sergeant&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;Resist 1,&lt;/td&gt;
+&lt;td&gt;-0.49214103&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Go Go Tomago - Darting Dynamo&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;Evasive,&lt;/td&gt;
+&lt;td&gt;-0.56778069&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Madam Mim - Fox&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;Rush,&lt;/td&gt;
+&lt;td&gt;-0.73605273&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Mr. Smee - Bumbling Mate&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;-1.04016676&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Daisy Duck - Donald's Date&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;4&lt;/td&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;-1.56298777&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;    Kruskal-Wallis rank sum test
+
+data:  Meta Bespoke Costs, Non-Meta Bespoke Costs
+Kruskal-Wallis chi-squared = 2.2244, df = 1, p-value = 0.1358
+
+Meta Bespoke Cost Mean: 0.695605
+Non-Meta Bespoke Cost Mean: 0.814527
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;This is not significant. Remember that this means something different from analyzing the residuals. This tells us that we don't know for sure whether the costs of the bespoke abilities used for meta decks are different from the costs of the bespoke abilities not used for meta decks.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Is Meta?&lt;/th&gt;
+&lt;th&gt;Non-Inkable&lt;/th&gt;
+&lt;th&gt;Inkable&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Yes&lt;/td&gt;
+&lt;td&gt;28&lt;/td&gt;
+&lt;td&gt;50&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;No&lt;/td&gt;
+&lt;td&gt;220&lt;/td&gt;
+&lt;td&gt;320&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;    Fisher&amp;#39;s Exact Test for Count Data
+
+data:  Bespoke contingency table
+p-value = 0.4595
+alternative hypothesis: true odds ratio is not equal to 1
+95 percent confidence interval:
+ 0.4780225 1.3662306
+sample estimates:
+odds ratio 
+ 0.8148121 
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Inconclusive. We really can't say anything at all here.&lt;/p&gt;
+&lt;h1 id="miscellaneous-analysis"&gt;Miscellaneous analysis&lt;a class="headerlink" href="#miscellaneous-analysis" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h1&gt;
+&lt;p&gt;And now for a couple of quick tests that were easy to do but don't really fit in elsewhere.&lt;/p&gt;
+&lt;h2 id="vanilla-curves-for-different-ink-types"&gt;Vanilla curves for different ink types&lt;a class="headerlink" href="#vanilla-curves-for-different-ink-types" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;This would make sense as a possibility. It would be possible for certain Ink colors to have weaker or stronger basic character cards on average, in exchange for having stronger or weaker other cards, or more cards with keyword abilities, or something like that.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Ink Color&lt;/th&gt;
+&lt;th&gt;Mean Residual for Basic Cards&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Steel&lt;/td&gt;
+&lt;td&gt;-0.124075752&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Amber&lt;/td&gt;
+&lt;td&gt;-0.045788255&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Sapphire&lt;/td&gt;
+&lt;td&gt;-0.002106329&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Ruby&lt;/td&gt;
+&lt;td&gt;0.057681882&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Emerald&lt;/td&gt;
+&lt;td&gt;0.060559613&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Amethyst&lt;/td&gt;
+&lt;td&gt;0.061776093&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;    Kruskal-Wallis rank sum test
+
+data:  Residuals by Ink Color for Basic Card 
+Kruskal-Wallis chi-squared = 3.5087, df = 5, p-value = 0.6221
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;It looked at first like Steel cards might've been slightly more powerful, but there is no significant effect.&lt;/p&gt;
+&lt;h2 id="rarities-and-residuals"&gt;Rarities and Residuals&lt;a class="headerlink" href="#rarities-and-residuals" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Rarer cards are not necessarily better value for their Ink cost.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Rarity&lt;/th&gt;
+&lt;th&gt;Mean Residual for Basic Cards&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Common&lt;/td&gt;
+&lt;td&gt;-0.01069499&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Uncommon&lt;/td&gt;
+&lt;td&gt;0.11113186&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Rare&lt;/td&gt;
+&lt;td&gt;-0.17159699&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;    Kruskal-Wallis rank sum test
+
+data:  Residuals by Rarity for Basic Cards
+Kruskal-Wallis chi-squared = 2.4492, df = 2, p-value = 0.2939
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Rarity&lt;/th&gt;
+&lt;th&gt;Mean Residual for Kwonly Cards&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Common&lt;/td&gt;
+&lt;td&gt;-0.01254122&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Uncommon&lt;/td&gt;
+&lt;td&gt;0.11939541&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Rare&lt;/td&gt;
+&lt;td&gt;-0.07916795&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Super Rare&lt;/td&gt;
+&lt;td&gt;-0.18535224&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Legendary&lt;/td&gt;
+&lt;td&gt;0.70294129&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;    Kruskal-Wallis rank sum test
+
+data:  Residuals by Rarity for Kwonly Cards
+Kruskal-Wallis chi-squared = 5.1727, df = 4, p-value = 0.27
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="rarities-and-complexity"&gt;Rarities and Complexity&lt;a class="headerlink" href="#rarities-and-complexity" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Rarer cards are more complex.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Card Type&lt;/th&gt;
+&lt;th&gt;Common&lt;/th&gt;
+&lt;th&gt;Uncommon&lt;/th&gt;
+&lt;th&gt;Rare&lt;/th&gt;
+&lt;th&gt;Super Rare&lt;/th&gt;
+&lt;th&gt;Legendary&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Basic&lt;/td&gt;
+&lt;td&gt;92&lt;/td&gt;
+&lt;td&gt;49&lt;/td&gt;
+&lt;td&gt;26&lt;/td&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Kwonly&lt;/td&gt;
+&lt;td&gt;77&lt;/td&gt;
+&lt;td&gt;20&lt;/td&gt;
+&lt;td&gt;6&lt;/td&gt;
+&lt;td&gt;3&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Bespoke&lt;/td&gt;
+&lt;td&gt;153&lt;/td&gt;
+&lt;td&gt;148&lt;/td&gt;
+&lt;td&gt;149&lt;/td&gt;
+&lt;td&gt;99&lt;/td&gt;
+&lt;td&gt;69&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;em&gt;The one kwonly legendary card is "Mickey Mouse - Brave Little Tailor", which was one of the first Lorcana cards revealed. I suspect that we won't get another kwonly legendary.&lt;/em&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;    Fisher&amp;#39;s Exact Test for Count Data with simulated p-value (based on 1e+05 replicates)
+
+data:  Rarity contingency table
+p-value = 1e-05
+alternative hypothesis: two.sided
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h2 id="is-there-power-creep-yet"&gt;Is there power creep yet?&lt;a class="headerlink" href="#is-there-power-creep-yet" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;For this, we train a linear model on the residuals of the basic and kwonly models, with set number as the independent variable. The question is whether the slope parameter is significantly non-zero.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;Model:
+Residual = 0.08011 - 0.02354 * Set_Num
+
+Coefficients:
+            Estimate Std. Error t value Pr(&amp;gt;|t|)  
+(Intercept)  0.08011    0.04956   1.616   0.1072  
+Set_Num     -0.02354    0.01350  -1.744   0.0823 .
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.3887 on 272 degrees of freedom
+Multiple R-squared:  0.01106,   Adjusted R-squared:  0.007423 
+F-statistic: 3.042 on 1 and 272 DF,  p-value: 0.08229
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The slope parameter is not significantly non-zero, and it is even a little negative, so we can conclude that Lorcana has so far avoided power creep for basic and kwonly cards.&lt;/p&gt;
+&lt;p&gt;Of course, it could be the case that there is power creep but only in the bespoke cards. It is also true that competitive decks will tend to get more powerful over time even if the population characteristics of the cards remain the same, because competitive players will take the best cards from the total population.&lt;/p&gt;
+&lt;h1 id="discussion"&gt;Discussion&lt;a class="headerlink" href="#discussion" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h1&gt;
+&lt;p&gt;With the main work of modeling and validating out of the way, I want to share some observations about Lorcana that have been informed by this exercise.&lt;/p&gt;
+&lt;h2 id="why-is-reckless-priced-as-a-buff"&gt;Why is Reckless priced as a buff?&lt;a class="headerlink" href="#why-is-reckless-priced-as-a-buff" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Reckless only makes sense if the card is assumed to have one lore for Cost reasons. If it doesn't, then Reckless is priced as a buff despite being a debuff. Only one Reckless card is meta-relevant, and that is because it is the best card for what it does for Ruby. Otherwise all the Reckless cards are bad, because you're paying for a lore that you never get to use.&lt;/p&gt;
+&lt;p&gt;Reckless does have synergy with "Who's with me?", but that is not the reason for balancing Reckless the way it is, because "Who's with me?" is a relatively recent Set 5 card and is not meta-relevant. Many other abilities inflect Reckless on opposing cards as a debuff.&lt;/p&gt;
+&lt;p&gt;I would be curious to hear what the designers think of Reckless. It's very possible that I'm missing something that explains why Reckless cards are valued the way that they are.&lt;/p&gt;
+&lt;h2 id="what-is-inkability-for"&gt;What is Inkability for?&lt;a class="headerlink" href="#what-is-inkability-for" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Inkability doesn't seem to matter to the Ink price of basic and kwonly cards. Inkability doesn't seem to matter to the popularity of a card in the meta. What is it for?&lt;/p&gt;
+&lt;p&gt;It is well-understood that you need to restrict the number of non-Inkables in your deck. If you have too many non-Inkables, then your deck becomes inconsistent because you will sometimes be unable to ramp up your inkwell. The &lt;a href="https://infinite.tcgplayer.com/article/Can-Probability-Theory-Help-You-Build-The-Perfect-Lorcana-Deck/75561a90-a643-454c-9564-ee61f007f47c/"&gt;article from a high-level player&lt;/a&gt; that I linked earlier has a good explanation of the math.&lt;/p&gt;
+&lt;p&gt;So the purpose of Inkability is to restrict deck construction by dividing cards into two classes and limiting the number of the second class that you can include in your deck.&lt;/p&gt;
+&lt;p&gt;Evaluating a card's desirability within a deck is a completely different thing from evaluating it individually. It seems like the designers decided to mostly not use Inkability as an input to the Ink cost of a card, even though they could have.&lt;/p&gt;
+&lt;p&gt;Because all of my modeling is towards evaluating individual cards, and not constructing decks, it will not tell me why certain cards are in the Inkable set and the non-Inkable set, so I can only speculate.&lt;/p&gt;
+&lt;p&gt;Maybe Inkability is used as a counter to keep cards from being too popular? They design cards, playtest with them, and make any card that everyone consistently picks non-Inkable in order to keep it from showing up in everyone's decks?&lt;/p&gt;
+&lt;p&gt;If that's the case, then it's probably a useful property for the proportion of bespoke cards that are inkable in metadecks to match the proportion of bespoke cards that are inkable overall, and that would explain why Inkability doesn't seem to matter for popularity of a card in the meta. It would be a signal that the designers are doing a good job at predicting which cards will be popular.&lt;/p&gt;
+&lt;p&gt;Maybe Inkability is a tool to limit the number of combos that you can pack into a deck? If you have a pair of cards that go together, like a Flotsam and Jetsam or a Chip and a Dale, then making one or both of them non-Inkable limits the number of such pairs that you can put into a deck.&lt;/p&gt;
+&lt;p&gt;Both of the preceding possibilities would be ways to increase deck diversity. If a new Inkable card comes out that is very good, then every deck may end up including it from now on. If a new non-Inkable card comes out, then it may have a shorter half-life in competitive play. So then the designers could try out new concepts with non-Inkables, and if they are fun and players like them, then they could be reprinted as Inkables. If they end up being too powerful, or not fun, then having them be non-Inkable limits the damage. If they are fun and players like them but they aren't popular competitively, then they could be reprinted as Inkables to give them another chance to catch on.&lt;/p&gt;
+&lt;p&gt;Maybe Inkability does have a clear cost, but only for bespoke abilities, and having non-Inkable basic and kwonly cards is an afterthought. I consider this unlikely, but I mention it because it is another possibility that is consistent with the data that I have.&lt;/p&gt;
+&lt;h2 id="when-are-single-card-models-useful"&gt;When are single-card models useful?&lt;a class="headerlink" href="#when-are-single-card-models-useful" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Our models for predicting the ink costs of individual cards may be good for a few situations:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Homebrewing new cards that are not re-skins of existing cards. Having a model gives you a good idea of where the gaps that you can explore are, and helps you pre-balance your new cards before playtesting with them.&lt;/li&gt;
+&lt;li&gt;Having a simple heuristic for picking good cards in isolation for a drafting game.&lt;/li&gt;
+&lt;li&gt;As a starting point for deck building.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;It is pointedly not good for evaluating a deck for competitive play, because it does not take into account interactions between different cards, or ways that certain cards can be countered. My models will only tell you a value for individual (basic or kwonly) cards in isolation, or individual bespoke abilities in isolation. It won't tell you anything about combinations of cards.&lt;/p&gt;
+&lt;p&gt;I do think that the information could be helpful for building decks, but only as a starting point. Picking good individual cards is a small part of the total process of figuring out a competitive deck.&lt;/p&gt;
+&lt;p&gt;The way that I think it adds value to deck-building is to help you understand whether you are getting good value for adding a card into your deck. If the game tells you that a bespoke ability is worth a certain amount of Ink, but you figure out a way to use the card that is worth more to you than that amount of Ink, then it is probably good value to include that card in your deck.&lt;/p&gt;
+&lt;p&gt;I think that you could probably put together some interesting and unique decks by thinking up a bunch of card combinations, evaluating them against the model to figure out which ones give you the most extra Ink value over their costs, and then just picking the best ones. I doubt this would be enough to win tournaments but it could take a beginner pretty far.&lt;/p&gt;
+&lt;h1 id="future-work"&gt;Future Work&lt;a class="headerlink" href="#future-work" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h1&gt;
+&lt;p&gt;I don't plan to do any more work on this, but my code and data are available to anyone who does want to.&lt;/p&gt;
+&lt;p&gt;I did very little detailed analysis of the bespoke abilities, even though there is a lot of structure within them. It would have been too much manual work. I tried to automate some of this with AI tools, but I was unable to get it to work well. Others may have more luck.&lt;/p&gt;
+&lt;p&gt;It's very easy to pose questions and very time-consuming to answer them rigorously. So I've laid a foundation, and here's all the things that I thought about but won't investigate:&lt;/p&gt;
+&lt;p&gt;Many abilities decompose into a set of effects that happen under certain situations. Many abilities are repeated under different names. Many abilities are just conditional keywords. How do we break abilities into factors in a way to lets us model their value accurately?&lt;/p&gt;
+&lt;p&gt;What is the discount factor for certain conditions? How much of a discount do you get for being evasive only on your turn? How much of a premium do you pay for giving a keyword to a chosen character each turn vs having it for yourself?&lt;/p&gt;
+&lt;p&gt;Many when-played abilities are also available standalone as action cards, and those action cards have a true ink cost, so that could be compared against the estimated cost of the bespoke ability based on the character. Similarly, many exert-to-activate abilities are also available standalone as item cards.&lt;/p&gt;
+&lt;p&gt;You could imagine that an action/item would be cheaper when bundled with a character, as a reward for pulling off complex combos. You could also imagine that it would be more expensive because it saves space in your deck. Which is it? I don't know.&lt;/p&gt;
+&lt;p&gt;What's the exchange rate between lore and ink? "Gathering Knowledge and Wisdom" implies that it's 1-to-1, but is that generally true? What about lore-removal and ink? At a 1-to-1 ratio for gaining lore, "Thievery" gives you one lore-removal for free. Is lore-removal undervalued in two-player games in order to make up for it being overvalued in many-player games?&lt;/p&gt;
+&lt;p&gt;Is lore from locations worth the same ink cost as lore from characters? A location can be thought of as a character card with no strength that always quests, so that is at least plausible.&lt;/p&gt;
+&lt;p&gt;A song card is an action card with a slight cost premium because there are two ways to pay for it. Do song cards actually have a cost premium over equivalent actions?&lt;/p&gt;
+&lt;p&gt;I completely ignored Classifications (storyborn/dreamborn/floodborn, hero/ally/princess/pirate/alien/etc.). Do some of them matter?&lt;/p&gt;
+&lt;p&gt;It's possible to model the keywords in greater detail than I did here. Should there be interaction terms between Strength/Willpower/Lore and some of the keywords? Should there be a term for Strength minus Willpower in order to take into account how unbalanced cards can be more useful than balanced cards in some situations? Is Lore on a high-Willpower card worth more because you can quest for it more times on average?&lt;/p&gt;
+&lt;p&gt;Inkability is a global property, in the sense that it doesn't seem to affect the cost of individual cards much but you need to keep a certain number in your deck. It's also an entirely different way to play a card, so it definitely doesn't interact with anything and should be a flat cost. But what is that cost, and why couldn't I find it conclusively?&lt;/p&gt;
+&lt;p&gt;I mentioned gaps in the game and homebrew cards. What if you go really crazy? Give characters five different keywords and pay for them with higher ink or less strength/willpower/lore. That could be fun. Or combinations of keywords that don't exist in the game yet. Or pull items and actions out of characters, or push them in. What happens if you push the limits of Shift and Singer to allow powerful cards to be played earlier in the game? What about adding zero Ink cost cards whose predicted cost is &amp;lt; 0.5 ink? Could we flip some of the most positive bespoke abilities into negative ones that affect the active player? These models give you guidance on how to quickly build a very wacky game in a way that might not be that unbalanced.&lt;/p&gt;
+&lt;p&gt;It really seems like there's a deep structure here that can be expanded much farther then I've done. I would love for someone to build on what I've done and answer some of these questions.&lt;/p&gt;
+&lt;p&gt;Once more, here are the links. Go wild.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="/files/lorcana-pred/lorcana_all_char.csv"&gt;All character cards&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="/files/lorcana-pred/lorcana_meta_cards.csv"&gt;Meta-relevant cards&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://github.com/dhashe/lorcana-pred"&gt;GitHub&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;em&gt;Thank you to Ansh Sancheti for providing feedback on drafts of this post. All mistakes are my own.&lt;/em&gt;&lt;/p&gt;</content><category term="Blog"></category></entry><entry><title>Responses to walking a very large poodle</title><link href="https://dhashe.com/responses-to-walking-a-very-large-poodle.html" rel="alternate"></link><published>2024-10-24T21:00:00-04:00</published><updated>2024-10-24T21:00:00-04:00</updated><author><name>David Hashe</name></author><id>tag:dhashe.com,2024-10-24:/responses-to-walking-a-very-large-poodle.html</id><summary type="html">&lt;style&gt;
 figcaption {
   text-align: center;
 }
@@ -54,7 +2628,7 @@ img {
 &lt;/figure&gt;
 
 &lt;p&gt;Anyway, I made a bunch of graphs. Graphs are great.&lt;/p&gt;
-&lt;h1 id="demographics"&gt;&lt;a class="toclink" href="#demographics"&gt;Demographics&lt;/a&gt;&lt;/h1&gt;
+&lt;h1 id="demographics"&gt;Demographics&lt;a class="headerlink" href="#demographics" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h1&gt;
 &lt;p&gt;I divided people by gender into Male / Female, and by age into Kid (18 or under), College (19-24), Adult (25-64), and Older (65+). This was based on my own judgment and is probably not perfectly accurate. I did not collect information on race or ethnicity, but the population was diverse. If I were unsure of which category to put someone, then I excluded that comment from the category breakdown.&lt;/p&gt;
 &lt;p&gt;In retrospect, I wish that I had divided Adult into more categories. Most of the comment-givers fell into Adult.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="" src="/images/poodle-walks/graphs/comments_by_age.png"&gt;
@@ -112,7 +2686,7 @@ img {
 &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;
-&lt;h1 id="topics"&gt;&lt;a class="toclink" href="#topics"&gt;Topics&lt;/a&gt;&lt;/h1&gt;
+&lt;h1 id="topics"&gt;Topics&lt;a class="headerlink" href="#topics" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h1&gt;
 &lt;p&gt;I grouped comments by topic. Name and Age were common topics but I rarely wrote down whether they asked, so I unfortunately don't have good data on those and have excluded them.&lt;/p&gt;
 &lt;p&gt;I mostly kept Archie's appearance constant while walking him: his haircut stayed the same over the entire period, and he always wore the same collar. However, about halfway through we did paint his toenails green, and starting around the same time he started sometimes wearing a tie. It is not meaningful to directly compare the frequencies of those topics with the others.&lt;/p&gt;
 &lt;figure&gt;
@@ -193,7 +2767,7 @@ img {
 &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;
-&lt;h1 id="breed-terminology"&gt;&lt;a class="toclink" href="#breed-terminology"&gt;Breed Terminology&lt;/a&gt;&lt;/h1&gt;
+&lt;h1 id="breed-terminology"&gt;Breed Terminology&lt;a class="headerlink" href="#breed-terminology" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h1&gt;
 &lt;p&gt;I recorded the most specific breed that people used to describe Archie. There are three types of poodle in the AKC classification: Toy Poodle, Miniature Poodle, and Standard Poodle. Archie is a large Standard Poodle.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="" src="/images/poodle-walks/graphs/breed_by_age.png"&gt;&lt;/p&gt;
 &lt;p&gt;As age increases, people are (probably) more likely to use "Standard Poodle".&lt;/p&gt;
@@ -204,7 +2778,7 @@ img {
 &lt;p&gt;It was pretty common for people to think he was a poodle mix. I didn't collect data on what they thought he was mixed with, but the most common guess seemed to be Great Dane.&lt;/p&gt;
 &lt;p&gt;We often call Archie a "Royal Standard Poodle", which is not an official AKC breed, but is colloquially a thing that very big poodles can be called. No one else ever called him a royal standard poodle. Although in fairness, we haven't seen any other royal standard poodles in Manhattan.&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;Update 12/2/2024: By now, two people have called him a royal standard poodle. I haven't continued keeping records so all that I can say is that the percentage for royal standard poodle is non-zero.&lt;/em&gt;&lt;/p&gt;
-&lt;h1 id="compliments"&gt;&lt;a class="toclink" href="#compliments"&gt;Compliments&lt;/a&gt;&lt;/h1&gt;
+&lt;h1 id="compliments"&gt;Compliments&lt;a class="headerlink" href="#compliments" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h1&gt;
 &lt;p&gt;I recorded what compliment words people used when commenting on Archie.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="" src="/images/poodle-walks/graphs/compliments.png"&gt;&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;As I wrote this, we read him the list of compliments in order of descending frequency. He enjoyed it greatly.&lt;/em&gt;&lt;/p&gt;
@@ -214,7 +2788,7 @@ img {
 &lt;p&gt;Kids were very likely to call him "big". College students favored "cute", "pretty", and "tall". Adults liked "gorgeous" and "nice". Older people went with "beautiful", "fancy", and "handsome". All of these are great words to describe Archie.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="" src="/images/poodle-walks/graphs/compliments_by_gender.png"&gt;&lt;/p&gt;
 &lt;p&gt;I'm not surprised that "gorgeous", "cute", "pretty", and "fancy" predicted women, but I can't get over how strongly "nice" predicted men.&lt;/p&gt;
-&lt;h1 id="comparisons"&gt;&lt;a class="toclink" href="#comparisons"&gt;Comparisons&lt;/a&gt;&lt;/h1&gt;
+&lt;h1 id="comparisons"&gt;Comparisons&lt;a class="headerlink" href="#comparisons" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h1&gt;
 &lt;p&gt;Archie is a very large poodle, and he did not have a traditional poodle haircut during the comment period. People often compared him to another animal, or more generally said that he was like something else.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="" src="/images/poodle-walks/graphs/comparisons_grouped.png"&gt;&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;Similar comparisons have been grouped together.&lt;/em&gt;&lt;/p&gt;
@@ -232,13 +2806,13 @@ img {
   &lt;figcaption&gt;&lt;em&gt;I think that Archie could pull off the Dandy trim.&lt;/em&gt;&lt;/figcaption&gt;
 &lt;/figure&gt;
 
-&lt;h1 id="comment-rate"&gt;&lt;a class="toclink" href="#comment-rate"&gt;Comment Rate&lt;/a&gt;&lt;/h1&gt;
+&lt;h1 id="comment-rate"&gt;Comment Rate&lt;a class="headerlink" href="#comment-rate" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h1&gt;
 &lt;p&gt;I tracked how long I walked Archie each day, which lets me calculate the rate that he got comments.&lt;/p&gt;
 &lt;p&gt;&lt;img alt="" src="/images/poodle-walks/graphs/comments_rate_hist.png"&gt;&lt;/p&gt;
 &lt;p&gt;I unfortunately did not track time-of-day. I didn't walk Archie at very consistent times and that probably accounts for some of the variation in comment rate. But there is an interesting effect for day-of-week:&lt;/p&gt;
 &lt;p&gt;&lt;img alt="" src="/images/poodle-walks/graphs/comments_rate.png"&gt;&lt;/p&gt;
 &lt;p&gt;The reason that Saturdays are so much higher is that that's when we take him with us to the grocery store and the farmers market. People absolutely love him at the farmers market. I think that it's an environment where people are already curious, social, and relaxed, and so we get a lot of comments.&lt;/p&gt;
-&lt;h1 id="conclusion"&gt;&lt;a class="toclink" href="#conclusion"&gt;Conclusion&lt;/a&gt;&lt;/h1&gt;
+&lt;h1 id="conclusion"&gt;Conclusion&lt;a class="headerlink" href="#conclusion" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h1&gt;
 &lt;p&gt;That's about it! Thank you for reading this silly post about our poodle.&lt;/p&gt;
 &lt;figure&gt;
   &lt;img src="/images/poodle-walks/poodle/nap-time.jpg" alt="A poodle napping on the couch with his head resting on a pillow."/&gt;
@@ -297,10 +2871,10 @@ code {
 &lt;li&gt;Even the best generic changes to the way that a C++ project is compiled will not get you to parity with the debugging experience of a scripting language. &lt;strong&gt;Targeted, specific source-level changes and custom debugger extensions are necessary to achieve the best possible debugging experience in C++&lt;/strong&gt;.&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;This guide is also specific to using g++ and clang++ on x86_64 GNU/Linux with gdb. Some advice may apply to other platforms.&lt;/p&gt;
-&lt;h1 id="general-compilation-changes"&gt;&lt;a class="toclink" href="#general-compilation-changes"&gt;General Compilation Changes&lt;/a&gt;&lt;/h1&gt;
-&lt;h2 id="enable-the-sanitizers"&gt;&lt;a class="toclink" href="#enable-the-sanitizers"&gt;Enable the sanitizers&lt;/a&gt;&lt;/h2&gt;
+&lt;h1 id="general-compilation-changes"&gt;General Compilation Changes&lt;a class="headerlink" href="#general-compilation-changes" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h1&gt;
+&lt;h2 id="enable-the-sanitizers"&gt;Enable the sanitizers&lt;a class="headerlink" href="#enable-the-sanitizers" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;Compile 1) your source code and 2) all third-party libraries with a compatible subset of the sanitizers that is relevant to your problem.&lt;/p&gt;
-&lt;h3 id="how"&gt;&lt;a class="toclink" href="#how"&gt;How&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="how"&gt;How&lt;a class="headerlink" href="#how" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;Add one of these to your &lt;code&gt;CFLAGS&lt;/code&gt; and &lt;code&gt;CXXFLAGS&lt;/code&gt;:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;-fsanitize=address,undefined&lt;/code&gt;&lt;/li&gt;
@@ -309,11 +2883,11 @@ code {
 &lt;/ul&gt;
 &lt;p&gt;With clang on Linux, you might need to reduce the ASLR security level in order to get TSan working. See reference.&lt;/p&gt;
 &lt;p&gt;With MSan, you will need to configure your build system to produce a position-independent executable (PIE).&lt;/p&gt;
-&lt;h3 id="why"&gt;&lt;a class="toclink" href="#why"&gt;Why&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="why"&gt;Why&lt;a class="headerlink" href="#why" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;C++ is not a safe language. If something "wrong" happens, then further execution becomes unpredictable. You really want to be able to catch "wrong" things immediately and the sanitizers are the best tools to do that, even if they aren't always perfect. It's very common in C++ to 1) observe something "weird", 2) read the related source, 3) think "that behavior is impossible", 4) try to debug it for way too long, 5) eventually realize that something "wrong" happened earlier that caused undefined behavior and broke your reasonable mental model of the code.&lt;/p&gt;
 &lt;p&gt;The sanitizers are not all compatible with each other, so you will need to test multiple builds with different subsets enabled.&lt;/p&gt;
 &lt;p&gt;The sanitizers will not catch everything. There is currently no production-quality C++ toolchain that promises to alert on all undefined behavior. Correctness issues from undefined behavior are currently an unavoidable risk of C++ code, and I don't expect that to change within the next five years.&lt;/p&gt;
-&lt;h3 id="ref"&gt;&lt;a class="toclink" href="#ref"&gt;Ref&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="ref"&gt;Ref&lt;a class="headerlink" href="#ref" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href="https://gcc.gnu.org/onlinedocs/gcc/Instrumentation-Options.html"&gt;GCC sanitizers&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="https://clang.llvm.org/docs/index.html"&gt;Clang sanitizers (docs index)&lt;/a&gt;&lt;/li&gt;
@@ -321,149 +2895,149 @@ code {
 &lt;li&gt;&lt;a href="https://blog.gistre.epita.fr/posts/benjamin.peter-2022-10-28-address_sanitizer_internals/"&gt;Address Sanitizer internals&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="https://stackoverflow.com/a/77856955"&gt;Clang + TSan workaround for Linux&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h2 id="enable-debug-mode-or-debug-hardening-within-your-stdlib"&gt;&lt;a class="toclink" href="#enable-debug-mode-or-debug-hardening-within-your-stdlib"&gt;Enable "debug mode" or "debug hardening" within your stdlib&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id="enable-debug-mode-or-debug-hardening-within-your-stdlib"&gt;Enable "debug mode" or "debug hardening" within your stdlib&lt;a class="headerlink" href="#enable-debug-mode-or-debug-hardening-within-your-stdlib" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;Enable "debug mode" for libstdc++ (the g++/linux stdlib implementation), or "debug hardening" for libc++ (the clang++/MacOS stdlib implementation). Note that libc++ used to provide a legacy "debug mode", but it has been removed and you want the new "debug hardening" mode.&lt;/p&gt;
-&lt;h3 id="how_1"&gt;&lt;a class="toclink" href="#how_1"&gt;How&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="how_1"&gt;How&lt;a class="headerlink" href="#how_1" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;If using libstdc++:&lt;/p&gt;
 &lt;p&gt;Add this define to your &lt;code&gt;CXXFLAGS&lt;/code&gt; if you are able to recompile your dependencies from source. It will change the ABI: &lt;code&gt;-D_GLIBCXX_DEBUG&lt;/code&gt;&lt;/p&gt;
 &lt;p&gt;Otherwise, add this define to your &lt;code&gt;CXXFLAGS&lt;/code&gt; to keep ABI compatibility: &lt;code&gt;-D_GLIBCXX_ASSERTIONS&lt;/code&gt;&lt;/p&gt;
 &lt;p&gt;If using libc++:&lt;/p&gt;
 &lt;p&gt;Add this define to your &lt;code&gt;CXXFLAGS&lt;/code&gt;: -&lt;code&gt;D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG&lt;/code&gt;&lt;/p&gt;
 &lt;p&gt;Hardening modes do not affect the ABI.&lt;/p&gt;
-&lt;h3 id="why_1"&gt;&lt;a class="toclink" href="#why_1"&gt;Why&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="why_1"&gt;Why&lt;a class="headerlink" href="#why_1" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;This enables various range checks and other assertions for stdlib containers.&lt;/p&gt;
 &lt;p&gt;Note that because the C++ stdlib relies extensively on class templates defined in header files, and template classes are instantiated separately in each translation unit, adding the flags when compiling your application is mostly sufficient to enable them. You don't need to recompile the stdlib.&lt;/p&gt;
 &lt;p&gt;The ABI compatibility story is complicated. libstdc++ provides separate options for whether or not you want to keep ABI compatibility, and gives you better coverage if you break ABI compatibility. libc++ has a single option and will silently enable/disable certain checks depending on the platform ABI.&lt;/p&gt;
-&lt;h3 id="ref_1"&gt;&lt;a class="toclink" href="#ref_1"&gt;Ref&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="ref_1"&gt;Ref&lt;a class="headerlink" href="#ref_1" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href="https://gcc.gnu.org/onlinedocs/libstdc++/manual/debug_mode.html"&gt;GCC manual&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="https://gcc.gnu.org/wiki/LibstdcxxDebugMode"&gt;GCC discussion of _GLIBCXX_DEBUG vs _GLIBCXX_ASSERTIONS&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="https://releases.llvm.org/12.0.0/projects/libcxx/docs/DesignDocs/DebugMode.html"&gt;Historical docs on Clang's old debug mode&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="https://libcxx.llvm.org/Hardening.html"&gt;Clang's new hardening levels&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h2 id="enable-debugging-information-for-preprocessor-macros"&gt;&lt;a class="toclink" href="#enable-debugging-information-for-preprocessor-macros"&gt;Enable debugging information for preprocessor macros&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id="enable-debugging-information-for-preprocessor-macros"&gt;Enable debugging information for preprocessor macros&lt;a class="headerlink" href="#enable-debugging-information-for-preprocessor-macros" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;Generate debug info for macros.&lt;/p&gt;
-&lt;h3 id="how_2"&gt;&lt;a class="toclink" href="#how_2"&gt;How&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="how_2"&gt;How&lt;a class="headerlink" href="#how_2" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;Add the following to your &lt;code&gt;CFLAGS&lt;/code&gt; and &lt;code&gt;CXXFLAGS&lt;/code&gt;: &lt;code&gt;-ggdb3&lt;/code&gt;&lt;/p&gt;
-&lt;h3 id="why_2"&gt;&lt;a class="toclink" href="#why_2"&gt;Why&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="why_2"&gt;Why&lt;a class="headerlink" href="#why_2" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;In certain macro-heavy codebases, where macros are used like functions and call each other, it can be very useful to be able to dynamically evaluate macros as part of expressions inside of gdb. In general, you shouldn't write new code this way, but any large C++ codebase probably has some parts that fit this description.&lt;/p&gt;
 &lt;p&gt;Note that you will still not be able to step-into macros.&lt;/p&gt;
-&lt;h3 id="ref_2"&gt;&lt;a class="toclink" href="#ref_2"&gt;Ref&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="ref_2"&gt;Ref&lt;a class="headerlink" href="#ref_2" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href="https://gcc.gnu.org/onlinedocs/gcc/Debugging-Options.html#:~:text=%2Dglevel-,%2Dggdblevel,-%2Dgvmslevel"&gt;GDB manual&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h2 id="enable-frame-pointers-for-all-functions"&gt;&lt;a class="toclink" href="#enable-frame-pointers-for-all-functions"&gt;Enable frame-pointers for all functions&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id="enable-frame-pointers-for-all-functions"&gt;Enable frame-pointers for all functions&lt;a class="headerlink" href="#enable-frame-pointers-for-all-functions" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;Compile with frame-pointers.&lt;/p&gt;
-&lt;h3 id="how_3"&gt;&lt;a class="toclink" href="#how_3"&gt;How&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="how_3"&gt;How&lt;a class="headerlink" href="#how_3" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;Add the following to your &lt;code&gt;CFLAGS&lt;/code&gt; and &lt;code&gt;CXXFLAGS&lt;/code&gt;: &lt;code&gt;-fno-omit-frame-pointer -mno-omit-leaf-frame-pointer&lt;/code&gt;&lt;/p&gt;
-&lt;h3 id="why_3"&gt;&lt;a class="toclink" href="#why_3"&gt;Why&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="why_3"&gt;Why&lt;a class="headerlink" href="#why_3" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;For a long time, it was fashionable to omit the frame pointer to save an extra register and generate more efficient code. This made sense for release builds on 32-bit x86, where there weren't many registers. The theory was also that DWARF debug information would provide enough information to reconstruct the call stack. In practice, this never worked very well. For x86_64, there are many more registers and it is worth it to always include the frame-pointer, even for release builds. You definitely want it while debugging. It will make printing backtraces faster and more reliable. Especially since we plan to optimize some translation units, having a frame pointer will ensure that we still get great backtraces even in optimized code.&lt;/p&gt;
 &lt;p&gt;The leaf frame pointer flag may be necessary if you have an old clang, due to a now-fixed bug. It never hurts to add it.&lt;/p&gt;
-&lt;h3 id="ref_3"&gt;&lt;a class="toclink" href="#ref_3"&gt;Ref&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="ref_3"&gt;Ref&lt;a class="headerlink" href="#ref_3" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href="https://www.brendangregg.com/blog/2024-03-17/the-return-of-the-frame-pointers.html"&gt;The return of the frame pointers&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="https://bugs.llvm.org/show_bug.cgi?id=9825"&gt;Fixed LLVM bug which required the leaf frame pointer flag&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h2 id="enable-asynchronous-unwind-tables"&gt;&lt;a class="toclink" href="#enable-asynchronous-unwind-tables"&gt;Enable asynchronous unwind tables&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id="enable-asynchronous-unwind-tables"&gt;Enable asynchronous unwind tables&lt;a class="headerlink" href="#enable-asynchronous-unwind-tables" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;Enable instruction-level unwind tables for every function.&lt;/p&gt;
-&lt;h3 id="how_4"&gt;&lt;a class="toclink" href="#how_4"&gt;How&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="how_4"&gt;How&lt;a class="headerlink" href="#how_4" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;Add the following to your &lt;code&gt;CFLAGS&lt;/code&gt; and &lt;code&gt;CXXFLAGS&lt;/code&gt;: &lt;code&gt;-fasynchronous-unwind-tables&lt;/code&gt;&lt;/p&gt;
 &lt;p&gt;This will ensure that the &lt;code&gt;.eh_frame&lt;/code&gt; binary section is produced.&lt;/p&gt;
-&lt;h3 id="why_4"&gt;&lt;a class="toclink" href="#why_4"&gt;Why&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="why_4"&gt;Why&lt;a class="headerlink" href="#why_4" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;This information is part of the size overhead of C++ exceptions, so projects will sometimes turn it off. However, it also allows for precise stack unwinding (for backtrace generation) inside the debugger.&lt;/p&gt;
 &lt;p&gt;We shouldn't mind the performance penalty during debugging. Enabling this flag will complement the frame pointers and give us the best possible backtraces.&lt;/p&gt;
-&lt;h3 id="ref_4"&gt;&lt;a class="toclink" href="#ref_4"&gt;Ref&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="ref_4"&gt;Ref&lt;a class="headerlink" href="#ref_4" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href="https://maskray.me/blog/2020-11-08-stack-unwinding"&gt;MaskRay overview of stack unwinding techniques&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="https://developers.redhat.com/articles/2023/06/19/debugging-gdb-create-custom-stack-winders#building_an_example_use_case"&gt;Writing a custom unwinder in gdb&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="https://gcc.gnu.org/onlinedocs/gcc/Code-Gen-Options.html"&gt;GCC manual&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h2 id="set-the-build-architecture-to-base-x86_64"&gt;&lt;a class="toclink" href="#set-the-build-architecture-to-base-x86_64"&gt;Set the build architecture to base x86_64&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id="set-the-build-architecture-to-base-x86_64"&gt;Set the build architecture to base x86_64&lt;a class="headerlink" href="#set-the-build-architecture-to-base-x86_64" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;Set your binary to build for a very old x86_64 machine.&lt;/p&gt;
-&lt;h3 id="how_5"&gt;&lt;a class="toclink" href="#how_5"&gt;How&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="how_5"&gt;How&lt;a class="headerlink" href="#how_5" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;Add the following to your &lt;code&gt;CFLAGS&lt;/code&gt; and &lt;code&gt;CXXFLAGS&lt;/code&gt;: &lt;code&gt;-march=x86-64&lt;/code&gt;&lt;/p&gt;
-&lt;h3 id="why_5"&gt;&lt;a class="toclink" href="#why_5"&gt;Why&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="why_5"&gt;Why&lt;a class="headerlink" href="#why_5" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;This may be important if you want to do reversible debugging &lt;sup id="fnref:rev_fix"&gt;&lt;a class="footnote-ref" href="#fn:rev_fix"&gt;3&lt;/a&gt;&lt;/sup&gt;. Reversible debugging requires a detailed model of the hardware ISA. Historically, reverse debuggers have not supported all x86_64 instructions (e.g. AVX). &lt;code&gt;x86-64&lt;/code&gt; is the baseline 64-bit x86 architecture without extensions, which is likely to be well-supported by all tools.&lt;/p&gt;
-&lt;h3 id="ref_5"&gt;&lt;a class="toclink" href="#ref_5"&gt;Ref&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="ref_5"&gt;Ref&lt;a class="headerlink" href="#ref_5" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href="https://wiki.gentoo.org/wiki/GCC_optimization#-march"&gt;Gentoo guide to exactly the opposite&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="https://stackoverflow.com/a/10559360"&gt;Difference between mtune and march&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="https://en.wikipedia.org/wiki/X86-64#:~:text=Microarchitecture%20levels,-%5Bedit%5D"&gt;x86_64 microarchitecture levels&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h2 id="ensure-that-static-libraries-are-fully-linked-into-your-binary"&gt;&lt;a class="toclink" href="#ensure-that-static-libraries-are-fully-linked-into-your-binary"&gt;Ensure that static libraries are fully linked into your binary&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id="ensure-that-static-libraries-are-fully-linked-into-your-binary"&gt;Ensure that static libraries are fully linked into your binary&lt;a class="headerlink" href="#ensure-that-static-libraries-are-fully-linked-into-your-binary" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;Link with whole-archive so that the entire static archive is available.&lt;/p&gt;
-&lt;h3 id="how_6"&gt;&lt;a class="toclink" href="#how_6"&gt;How&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="how_6"&gt;How&lt;a class="headerlink" href="#how_6" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;Add the following to your &lt;code&gt;LDFLAGS&lt;/code&gt;: &lt;code&gt;--whole-archive&lt;/code&gt;&lt;/p&gt;
-&lt;h3 id="why_6"&gt;&lt;a class="toclink" href="#why_6"&gt;Why&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="why_6"&gt;Why&lt;a class="headerlink" href="#why_6" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;It is reasonable to want to call any function that is available from your source code from your debugger. Unfortunately, many things in C++ conspire to make this tricky. One such thing is that the linker will only pull in object files from a static archive if you use a symbol from that object file. So if you have a static library as a dependency and don't use any functions from one of the objects within the archive, then you won't be able to use that object file from the debugger because it won't be present in your binary.&lt;/p&gt;
 &lt;p&gt;This is especially annoying if you statically link against your libc, because many libcs put every symbol into its own object file in order to decrease the final binary size, prevent inlining, and allow symbol shadowing. Then, inside the debugger, you find that you can't call e.g. strlen to check the size of a null-terminated string because you never called it in your program. Of course, glibc can't be statically linked, so this is more of a problem for embedded platforms.&lt;/p&gt;
-&lt;h3 id="ref_6"&gt;&lt;a class="toclink" href="#ref_6"&gt;Ref&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="ref_6"&gt;Ref&lt;a class="headerlink" href="#ref_6" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href="https://linux.die.net/man/1/ld#:~:text=reporting%20unresolved%20symbols.-,%2D%2Dwhole%2Darchive,-For%20each%20archive"&gt;ld manpage&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h1 id="semi-specific-compilation-and-source-changes"&gt;&lt;a class="toclink" href="#semi-specific-compilation-and-source-changes"&gt;Semi-Specific Compilation and Source Changes&lt;/a&gt;&lt;/h1&gt;
-&lt;h2 id="partition-your-tus-into-debuggable-and-fast"&gt;&lt;a class="toclink" href="#partition-your-tus-into-debuggable-and-fast"&gt;Partition your TUs into "debuggable" and "fast"&lt;/a&gt;&lt;/h2&gt;
+&lt;h1 id="semi-specific-compilation-and-source-changes"&gt;Semi-Specific Compilation and Source Changes&lt;a class="headerlink" href="#semi-specific-compilation-and-source-changes" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h1&gt;
+&lt;h2 id="partition-your-tus-into-debuggable-and-fast"&gt;Partition your TUs into "debuggable" and "fast"&lt;a class="headerlink" href="#partition-your-tus-into-debuggable-and-fast" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;Partition your TUs into "debuggable" and "fast", and compile the "debuggable" TUs with &lt;code&gt;--ggdb3 -O0&lt;/code&gt; and the  "fast" TU's with &lt;code&gt;--ggdb3 -O3&lt;/code&gt; &lt;sup id="fnref:gdb_fix"&gt;&lt;a class="footnote-ref" href="#fn:gdb_fix"&gt;4&lt;/a&gt;&lt;/sup&gt;.&lt;/p&gt;
-&lt;h3 id="how_7"&gt;&lt;a class="toclink" href="#how_7"&gt;How&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="how_7"&gt;How&lt;a class="headerlink" href="#how_7" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;You need to build different sets of TUs with different &lt;code&gt;CFLAGS&lt;/code&gt; and &lt;code&gt;CXXFLAGS&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;This is unfortunately quite specific to your build system, and I am not aware of any that have this as a built-in feature. My recommendation is to hack up your build system so that you can specify a set of "debuggable" TUs, and then either convince your coworkers to let you merge the change or maintain it for yourself on a private branch.&lt;/p&gt;
 &lt;p&gt;Alternatively, you may be able to bypass the build system entirely. If your codebase has a compile_commands.json so that clangd can provide accurate intellisense, then you can re-purpose it to help you. The compilation database will have compiler commands for every TU in your project. You want to write a script that 1) runs a normal optimized build of your project, 2) grabs the compiler commands for your "debuggable" TUs, re-writes them with &lt;code&gt;--ggdb3 -O0&lt;/code&gt; flags, and runs them, and 3) re-runs the linker command to relink the executable with the new debuggable object files.&lt;/p&gt;
 &lt;p&gt;Alternatively, gcc, clang, and msvc each provide pragmas that control optimizations for individual functions or ranges of functions: &lt;sup id="fnref:pragma_fix"&gt;&lt;a class="footnote-ref" href="#fn:pragma_fix"&gt;5&lt;/a&gt;&lt;/sup&gt;&lt;/p&gt;
 &lt;p&gt;For gcc, add &lt;code&gt;#pragma GCC optimize ("O0")&lt;/code&gt; to the top of your "debuggable" source files, and compile the entire project with &lt;code&gt;--ggdb3 -O3&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;For clang, add &lt;code&gt;#pragma clang optimize off&lt;/code&gt; to the top of your "debuggable" source files, and compile the entire project with &lt;code&gt;--ggdb3 -O3&lt;/code&gt;.&lt;/p&gt;
-&lt;h3 id="why_7"&gt;&lt;a class="toclink" href="#why_7"&gt;Why&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="why_7"&gt;Why&lt;a class="headerlink" href="#why_7" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;C++ is often used for code that has to be fast. Unoptimized C++ code can be very slow, especially in large projects. Note that when debugging you often have a pretty good idea of roughly where the bug is going to be, even if you don't know exactly what's going wrong. And the ABI of the generated code doesn't depend on the optimization level, so it is possible to link together optimized and unoptimized TUs. So then, a reasonable strategy is to identify the TUs that have to be debugged, and then only compile those without optimizations, and compile the rest of the project with optimizations.&lt;/p&gt;
 &lt;p&gt;Note that we do still want debug information for the optimized TUs. This will always make our backtraces more informative, and we will sometimes be wrong about where the bug is, so it would be nice to poke around in the optimized TUs for a bit to gather information before we recompile (although the debugging experience will be worse).&lt;/p&gt;
 &lt;p&gt;Also note that sometimes a bug will only appear in optimized code. Usually this means that you have triggered undefined behavior, which the optimizer is taking advantage of to generate faster code. Hopefully UBSan is able to catch this for you, and if UBSan can't and the issue isn't obvious from the source then you should look backwards from the error and examine assembly to see where the compiler has done something weird.&lt;/p&gt;
 &lt;p&gt;Note that g++ recommends using &lt;code&gt;-Og&lt;/code&gt; instead of &lt;code&gt;-O0&lt;/code&gt; for the best debugging experience. But this will still inline functions and optimize out local variables, so I don't recommend using it. &lt;code&gt;-Og&lt;/code&gt; is probably a decent choice if you have to compile your entire program at a single optimization level, but we can do even better with our split strategy.&lt;/p&gt;
-&lt;h3 id="ref_7"&gt;&lt;a class="toclink" href="#ref_7"&gt;Ref&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="ref_7"&gt;Ref&lt;a class="headerlink" href="#ref_7" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href="https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html"&gt;GCC manual on optimization levels&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="https://gcc.gnu.org/onlinedocs/gcc/Function-Specific-Option-Pragmas.html"&gt;GCC manual on optimization pragmas&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="https://clang.llvm.org/docs/LanguageExtensions.html#extensions-for-selectively-disabling-optimization"&gt;Clang manual on optimization pragmas&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="https://learn.microsoft.com/en-us/cpp/preprocessor/optimize?view=msvc-170"&gt;MSVC manual on optimization pragmas&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h2 id="explicitly-instantiate-important-template-classes"&gt;&lt;a class="toclink" href="#explicitly-instantiate-important-template-classes"&gt;Explicitly instantiate important template classes&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id="explicitly-instantiate-important-template-classes"&gt;Explicitly instantiate important template classes&lt;a class="headerlink" href="#explicitly-instantiate-important-template-classes" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;Explicitly instantiate every template class specialization that you want to debug.&lt;/p&gt;
-&lt;h3 id="how_8"&gt;&lt;a class="toclink" href="#how_8"&gt;How&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="how_8"&gt;How&lt;a class="headerlink" href="#how_8" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;Add lines like &lt;code&gt;template class std::vector&amp;lt;Foo&amp;gt;;&lt;/code&gt; to a single translation unit (in a cc / source file).&lt;/p&gt;
-&lt;h3 id="why_8"&gt;&lt;a class="toclink" href="#why_8"&gt;Why&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="why_8"&gt;Why&lt;a class="headerlink" href="#why_8" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;In C++, a member function of a template class is only instantiated if it is used, and this implicit instantiation is separate from the implicit instantiation of the surrounding template class. So, for example, if you want to be able to fully debug a &lt;code&gt;std::vector&amp;lt;Foo&amp;gt;&lt;/code&gt;, then you need to have used every member function of &lt;code&gt;std::vector&lt;/code&gt;, specifically on a &lt;code&gt;std::vector&amp;lt;Foo&amp;gt;&lt;/code&gt;. It doesn't count to have used the member function on a &lt;code&gt;std::vector&amp;lt;Bar&amp;gt;&lt;/code&gt;, because each template class is independent.&lt;/p&gt;
 &lt;p&gt;Confusingly, gdb will suggest that the function "may have been inlined", when the actual problem is that the template member function was never generated in the first place.&lt;/p&gt;
 &lt;p&gt;I think that it is reasonable to want to use any function from the class template on any specialization while debugging.&lt;/p&gt;
 &lt;p&gt;The way to get this behavior reliably is to explicitly instantiate the template class, which will ensure that all member functions are instantiated, even the ones that you do not use.&lt;/p&gt;
 &lt;p&gt;Note that Arthur O'Dwyer, who is substantially more qualified than I am to be giving advice on this, has an article where he explicitly and directly says not to do the thing that I am telling you to do. He is correct that some classes cannot be explicitly instantiated for all valid template arguments, but I am going to do it anyway because 1) it usually works, 2) it is obvious when it doesn't work, and 3) we are writing quick debugging hacks and not doing software engineering. Be aware that it may be a bad idea to leave explicit template instantiations of STL classes in your production code.&lt;/p&gt;
-&lt;h3 id="ref_8"&gt;&lt;a class="toclink" href="#ref_8"&gt;Ref&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="ref_8"&gt;Ref&lt;a class="headerlink" href="#ref_8" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href="https://quuxplusone.github.io/blog/2021/08/06/dont-explicitly-instantiate-std-templates/"&gt;Arthur O'Dwyer explicitly saying to never do the thing that I am telling you to do anyway&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h1 id="specific-source-changes"&gt;&lt;a class="toclink" href="#specific-source-changes"&gt;Specific Source Changes&lt;/a&gt;&lt;/h1&gt;
-&lt;h2 id="evaluate-preprocessor-ifdefs"&gt;&lt;a class="toclink" href="#evaluate-preprocessor-ifdefs"&gt;Evaluate preprocessor ifdef's&lt;/a&gt;&lt;/h2&gt;
+&lt;h1 id="specific-source-changes"&gt;Specific Source Changes&lt;a class="headerlink" href="#specific-source-changes" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h1&gt;
+&lt;h2 id="evaluate-preprocessor-ifdefs"&gt;Evaluate preprocessor ifdef's&lt;a class="headerlink" href="#evaluate-preprocessor-ifdefs" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;Run &lt;a href="https://dotat.at/prog/unifdef/"&gt;unifdef&lt;/a&gt; to evaluate preprocessor ifdefs.&lt;/p&gt;
-&lt;h3 id="how_9"&gt;&lt;a class="toclink" href="#how_9"&gt;How&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="how_9"&gt;How&lt;a class="headerlink" href="#how_9" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;Install unifdef and run it in-place on a subset of your codebase's files using the -D defines that you are going to use for your build.&lt;/p&gt;
-&lt;h3 id="why_9"&gt;&lt;a class="toclink" href="#why_9"&gt;Why&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="why_9"&gt;Why&lt;a class="headerlink" href="#why_9" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;As far as I can tell, the main uses for ifdefs are 1) header guards, 2) platform-specific code, and 3) commenting out blocks of debug or otherwise unused code. (1) is almost never confusing and both (2) and (3) are things that you'll know in advance. You might as well use a tool to evaluate them and make the control flow easier to understand.&lt;/p&gt;
 &lt;p&gt;This tip is especially useful if you are working with a very old codebase that has tons of platform-specific ifdefs that make it difficult to understand the code. The ideal solution would be to drop support for old platforms and delete the ifdefs, but that is often not possible.&lt;/p&gt;
 &lt;p&gt;Unfortunately, unifdef is not perfect at parsing modern C++ code. I don't remember the exact issue, but I have had it fail to parse a single file before on a large codebase. So, my recommendation would be to use it selectively on the files that you care about debugging. Alternatively, you can try your luck and use it everywhere.&lt;/p&gt;
-&lt;h3 id="ref_9"&gt;&lt;a class="toclink" href="#ref_9"&gt;Ref&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="ref_9"&gt;Ref&lt;a class="headerlink" href="#ref_9" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href="https://dotat.at/prog/unifdef/"&gt;unifdef homepage&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h2 id="expand-complex-macros"&gt;&lt;a class="toclink" href="#expand-complex-macros"&gt;Expand complex macros&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id="expand-complex-macros"&gt;Expand complex macros&lt;a class="headerlink" href="#expand-complex-macros" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;Run the preprocessor manually to expand complex macros.&lt;/p&gt;
-&lt;h3 id="how_10"&gt;&lt;a class="toclink" href="#how_10"&gt;How&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="how_10"&gt;How&lt;a class="headerlink" href="#how_10" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;Identify a confusing macro. Use &lt;code&gt;g++ -E&lt;/code&gt; to run the preprocessor on the TU and evaluate the macro. Copy the expanded macro over the original source code.&lt;/p&gt;
-&lt;h3 id="why_10"&gt;&lt;a class="toclink" href="#why_10"&gt;Why&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="why_10"&gt;Why&lt;a class="headerlink" href="#why_10" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;With &lt;code&gt;g++ -ggdb3&lt;/code&gt;, you gain the ability to list or evaluate macros. But you don't have the ability to step through them. Expanding the macro within the source gives you the ability to step-through the expanded macro in the debugger, which can be very useful in certain projects.&lt;/p&gt;
 &lt;p&gt;Note that &lt;code&gt;g++ -E&lt;/code&gt; also evaluates all ifdefs, and you can set the values for defines via the command line. I still prefer to use unifdef for evaluating ifdefs because it gives back clean source code that hasn't been fully preprocessed.&lt;/p&gt;
-&lt;h3 id="ref_10"&gt;&lt;a class="toclink" href="#ref_10"&gt;Ref&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="ref_10"&gt;Ref&lt;a class="headerlink" href="#ref_10" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href="https://gcc.gnu.org/onlinedocs/gcc/Preprocessor-Options.html"&gt;GCC options controlling the preprocessor&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h2 id="set-up-fast-conditional-breakpoints-using-the-x86-int3-trick"&gt;&lt;a class="toclink" href="#set-up-fast-conditional-breakpoints-using-the-x86-int3-trick"&gt;Set up fast conditional breakpoints using the x86 INT3 trick&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id="set-up-fast-conditional-breakpoints-using-the-x86-int3-trick"&gt;Set up fast conditional breakpoints using the x86 INT3 trick&lt;a class="headerlink" href="#set-up-fast-conditional-breakpoints-using-the-x86-int3-trick" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;Modify the source to insert native-speed conditional breakpoints that can be turned on or off from inside the debugger.&lt;/p&gt;
-&lt;h3 id="how_11"&gt;&lt;a class="toclink" href="#how_11"&gt;How&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="how_11"&gt;How&lt;a class="headerlink" href="#how_11" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;volatile bool breakpoint_1 = false;
 ...
 void func() {
@@ -480,54 +3054,54 @@ void func() {
 
 &lt;p&gt;The &lt;code&gt;nop&lt;/code&gt; instruction after the &lt;code&gt;int3&lt;/code&gt; helps gdb understand the context of where the breakpoint fired &lt;sup id="fnref:int_fix"&gt;&lt;a class="footnote-ref" href="#fn:int_fix"&gt;6&lt;/a&gt;&lt;/sup&gt; .&lt;/p&gt;
 &lt;p&gt;Make sure that &lt;code&gt;breakpoint_1&lt;/code&gt; has external linkage (e.g. isn't static and isn't inside of an anonymous namespace) so that you can easily enable/disable it regardless of where your debugger is sitting in the stack.&lt;/p&gt;
-&lt;h3 id="why_11"&gt;&lt;a class="toclink" href="#why_11"&gt;Why&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="why_11"&gt;Why&lt;a class="headerlink" href="#why_11" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;If you create a conditional breakpoint from inside of gdb, then it will trap on every occurrence, evaluate your break condition, and continue if the break condition is not met. This can be very slow. gdb does it this way because it only requires overwriting a single byte of the binary, which it knows how to do safely.&lt;/p&gt;
 &lt;p&gt;The way that gdb sets a breakpoint is to temporarily replace an instruction with the single byte &lt;code&gt;int $3&lt;/code&gt; instruction, which has opcode 0xCC. This instruction generates a software interrupt and allows gdb to take over control. Then, once the instruction is hit, gdb makes sure to also evaluate the single instruction that it had to remove.&lt;/p&gt;
 &lt;p&gt;But nothing stops us from just inserting an &lt;code&gt;int $3&lt;/code&gt; instruction into our binary ourselves. And furthermore, since we are doing this before the program is compiled, it is easy for us to write a condition on when the instruction fires. This can be hugely faster because we are able to evaluate the condition without needing to do a software interrupt on every occurrence.&lt;/p&gt;
 &lt;p&gt;The condition variable should be volatile so that we can safely update the variable in the debugger in order to enable / disable our breakpoint. Using volatile means that the program will always read the variable from memory before using it.&lt;/p&gt;
-&lt;h3 id="ref_11"&gt;&lt;a class="toclink" href="#ref_11"&gt;Ref&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="ref_11"&gt;Ref&lt;a class="headerlink" href="#ref_11" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href="https://en.wikipedia.org/wiki/INT_(x86_instruction)"&gt;Wikipedia on the INT x86 instruction&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h1 id="debugger-configuration-changes"&gt;&lt;a class="toclink" href="#debugger-configuration-changes"&gt;Debugger Configuration Changes&lt;/a&gt;&lt;/h1&gt;
-&lt;h2 id="avoid-stepping-into-irrelevant-code"&gt;&lt;a class="toclink" href="#avoid-stepping-into-irrelevant-code"&gt;Avoid stepping into irrelevant code&lt;/a&gt;&lt;/h2&gt;
+&lt;h1 id="debugger-configuration-changes"&gt;Debugger Configuration Changes&lt;a class="headerlink" href="#debugger-configuration-changes" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h1&gt;
+&lt;h2 id="avoid-stepping-into-irrelevant-code"&gt;Avoid stepping into irrelevant code&lt;a class="headerlink" href="#avoid-stepping-into-irrelevant-code" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;Configure gdb to step-over the stdlib, third-party libraries, your project's utility code, and maybe all "fast" TUs.&lt;/p&gt;
-&lt;h3 id="how_12"&gt;&lt;a class="toclink" href="#how_12"&gt;How&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="how_12"&gt;How&lt;a class="headerlink" href="#how_12" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;Add lines like &lt;code&gt;gdb skip -gfi /usr/lib/c++&lt;/code&gt; to your global or project-specific &lt;code&gt;.gdbinit&lt;/code&gt; file.
 Also add lines for any third-party libraries or fast TUs that you would like to always step-over.&lt;/p&gt;
-&lt;h3 id="why_12"&gt;&lt;a class="toclink" href="#why_12"&gt;Why&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="why_12"&gt;Why&lt;a class="headerlink" href="#why_12" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;I often want to rapidly step through a function and step-into related code without ever stepping into core layers like the stdlib. When I am debugging my code, it is usually because I have a bug within my code, and I want to treat the stdlib and most parts of the project as a black box by default.&lt;/p&gt;
 &lt;p&gt;This may not sound like a big deal, but it can be really frustrating. For example, let's say that I want to step into a function call that takes a lot of arguments. Before actually stepping into the function call, gdb will step into each of the argument expressions. If one of those expressions calls a constructor, then gdb will step into the constructor and switch to a different file. A simple attempt to step into a function call at point can turn into dozens of step/next/finish commands spanning several files before you get where you want to go. It is often easier to just set a breakpoint on the function and continue.&lt;/p&gt;
 &lt;p&gt;The key insight is that you probably know in advance that you never want to step into most of those argument expression constructors, because they are probably for stdlib classes or small utility classes that you would like to treat as black boxes. After all, if you're constructing a class inside an argument list then it is probably something simple.&lt;/p&gt;
 &lt;p&gt;Luckily, gdb can be configured to always step-over arbitrary files and directories. We should take advantage of this and blacklist code that we don't usually want to step-into. For example: the stdlib, third-party dependencies, utility classes, custom string or enumeration classes, or classes that make heavy use of template meta-programming.&lt;/p&gt;
-&lt;h3 id="ref_12"&gt;&lt;a class="toclink" href="#ref_12"&gt;Ref&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="ref_12"&gt;Ref&lt;a class="headerlink" href="#ref_12" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href="https://stackoverflow.com/a/61866506"&gt;StackOverflow answer on skipping over specific files and directories&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h2 id="enable-stdlib-pretty-printers"&gt;&lt;a class="toclink" href="#enable-stdlib-pretty-printers"&gt;Enable stdlib pretty-printers&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id="enable-stdlib-pretty-printers"&gt;Enable stdlib pretty-printers&lt;a class="headerlink" href="#enable-stdlib-pretty-printers" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;Enable gdb pretty-printers for the stdlib containers.&lt;/p&gt;
-&lt;h3 id="how_13"&gt;&lt;a class="toclink" href="#how_13"&gt;How&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="how_13"&gt;How&lt;a class="headerlink" href="#how_13" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;This depends on your Linux distribution and your version of gdb. Run the following command inside gdb while attached to your running process to see if the stdlib pretty-printers are installed and available.&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;(gdb) info pretty-printer
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;Note that just running &lt;code&gt;info pretty-printer&lt;/code&gt; inside a fresh gdb that is not attached to anything will not tell you if the stdlib pretty-printers are available. The pretty-printers are associated with a particular stdlib version, and so you need to have loaded a binary that is linked with a stdlib.&lt;/p&gt;
-&lt;h3 id="why_13"&gt;&lt;a class="toclink" href="#why_13"&gt;Why&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="why_13"&gt;Why&lt;a class="headerlink" href="#why_13" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;Improve the signal-to-noise ratio when printing stdlib containers inside the debugger. Reduce the mental load of debugging.&lt;/p&gt;
 &lt;p&gt;Note that gdb pretty-printers are the partial solution to template hell for debuggers. They complement C++20 concepts, which are the partial solution to template hell for compilers.&lt;/p&gt;
-&lt;h3 id="ref_13"&gt;&lt;a class="toclink" href="#ref_13"&gt;Ref&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="ref_13"&gt;Ref&lt;a class="headerlink" href="#ref_13" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href="https://sourceware.org/gdb/current/onlinedocs/gdb.html/Pretty_002dPrinter-Commands.html"&gt;GDB manual on using pretty-printers&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h2 id="write-pretty-printers-for-your-projects-vocabulary-types"&gt;&lt;a class="toclink" href="#write-pretty-printers-for-your-projects-vocabulary-types"&gt;Write pretty-printers for your project's vocabulary types&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id="write-pretty-printers-for-your-projects-vocabulary-types"&gt;Write pretty-printers for your project's vocabulary types&lt;a class="headerlink" href="#write-pretty-printers-for-your-projects-vocabulary-types" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;Use the gdb Python API to write pretty-printers for your project's frequently-used classes that have a meaningful short text description that summarizes a complicated and confusing implementation.&lt;/p&gt;
-&lt;h3 id="how_14"&gt;&lt;a class="toclink" href="#how_14"&gt;How&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="how_14"&gt;How&lt;a class="headerlink" href="#how_14" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;Refer to the gdb manual.&lt;/p&gt;
-&lt;h3 id="why_14"&gt;&lt;a class="toclink" href="#why_14"&gt;Why&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="why_14"&gt;Why&lt;a class="headerlink" href="#why_14" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;Improve the signal-to-noise ratio when printing objects inside the debugger. This is analogous to writing a custom &lt;code&gt;__str__&lt;/code&gt; function on a Python object, except less useful because it only works within the debugger.&lt;/p&gt;
 &lt;p&gt;Especially consider writing pretty-printers for any core "vocabulary types" within your codebase that have a tricky implementation. A vocabulary type is a type that is commonly passed around across interfaces. Because they are commonly used, there is a high payoff for making them readable. Many vocabulary types will be basic or standard types, but you probably have a few custom ones in your codebase.&lt;/p&gt;
 &lt;p&gt;Note that gdb pretty-printers are the partial solution to template hell for debuggers. They complement C++20 concepts, which are the partial solution to template hell for compilers.&lt;/p&gt;
-&lt;h3 id="ref_14"&gt;&lt;a class="toclink" href="#ref_14"&gt;Ref&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id="ref_14"&gt;Ref&lt;a class="headerlink" href="#ref_14" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href="https://sourceware.org/gdb/current/onlinedocs/gdb.html/Writing-a-Pretty_002dPrinter.html"&gt;GDB manual on writing a pretty-printer&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2125r0.pdf"&gt;Vocabulary types&lt;/a&gt;&lt;/li&gt;
