@@ -4,6 +4,13 @@ figcaption {
   text-align: center;
 }
 
+table {
+    overflow-x: auto;
+    display: block;
+    width: 100%;
+    max-width: 100%;
+}
+
 .bordered-div {
     border: 2px solid black;
     padding: 25px;
@@ -14,9 +21,16 @@ figcaption {
 }
 &lt;/style&gt;
 
-&lt;p&gt;Over the past few months, my friends and I have gotten into the collectible trading card game Disney Lorcana. I decided that I wanted to use statistics to understand it better. I am not a competitive Lorcana …&lt;/p&gt;</summary><content type="html">&lt;style&gt;
+&lt;p&gt;Over the past few months, my friends and I have gotten into the collectible trading card game Disney Lorcana. I decided that I wanted to use statistics to …&lt;/p&gt;</summary><content type="html">&lt;style&gt;
 figcaption {
   text-align: center;
+}
+
+table {
+    overflow-x: auto;
+    display: block;
+    width: 100%;
+    max-width: 100%;
 }
 
 .bordered-div {
