@@ -43,7 +43,7 @@ MARKDOWN = {
         "markdown.extensions.meta": {},
         "markdown.extensions.md_in_html": {},
         "markdown.extensions.toc": {
-            "anchorlink": True,
+            "permalink": "#",
         },
     },
     "output_format": "html5",
