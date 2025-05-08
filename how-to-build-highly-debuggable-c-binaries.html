@@ -285,8 +285,13 @@ void func() {
 <h2 id="avoid-stepping-into-irrelevant-code">Avoid stepping into irrelevant code<a class="headerlink" href="#avoid-stepping-into-irrelevant-code" title="Permanent link">#</a></h2>
 <p>Configure gdb to step-over the stdlib, third-party libraries, your project's utility code, and maybe all "fast" TUs.</p>
 <h3 id="how_12">How<a class="headerlink" href="#how_12" title="Permanent link">#</a></h3>
-<p>Add lines like <code>gdb skip -gfi /usr/lib/c++</code> to your global or project-specific <code>.gdbinit</code> file.
-Also add lines for any third-party libraries or fast TUs that you would like to always step-over.</p>
+<p>Add lines like this to your global or project-specific <code>.gdbinit</code> file:</p>
+<div class="highlight"><pre><span></span><code>skip -gfile bits/*.h
+skip -gfile include/c++/*
+skip -function &quot;operator new&quot;
+</code></pre></div>
+
+<p>Also add lines for any third-party libraries or fast TUs that you would like to always step-over.</p>
 <h3 id="why_12">Why<a class="headerlink" href="#why_12" title="Permanent link">#</a></h3>
 <p>I often want to rapidly step through a function and step-into related code without ever stepping into core layers like the stdlib. When I am debugging my code, it is usually because I have a bug within my code, and I want to treat the stdlib and most parts of the project as a black box by default.</p>
 <p>This may not sound like a big deal, but it can be really frustrating. For example, let's say that I want to step into a function call that takes a lot of arguments. Before actually stepping into the function call, gdb will step into each of the argument expressions. If one of those expressions calls a constructor, then gdb will step into the constructor and switch to a different file. A simple attempt to step into a function call at point can turn into dozens of step/next/finish commands spanning several files before you get where you want to go. It is often easier to just set a breakpoint on the function and continue.</p>

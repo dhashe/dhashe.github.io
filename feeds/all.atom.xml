@@ -3081,8 +3081,13 @@ void func() {
 &lt;h2 id="avoid-stepping-into-irrelevant-code"&gt;Avoid stepping into irrelevant code&lt;a class="headerlink" href="#avoid-stepping-into-irrelevant-code" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;Configure gdb to step-over the stdlib, third-party libraries, your project's utility code, and maybe all "fast" TUs.&lt;/p&gt;
 &lt;h3 id="how_12"&gt;How&lt;a class="headerlink" href="#how_12" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;Add lines like &lt;code&gt;gdb skip -gfi /usr/lib/c++&lt;/code&gt; to your global or project-specific &lt;code&gt;.gdbinit&lt;/code&gt; file.
-Also add lines for any third-party libraries or fast TUs that you would like to always step-over.&lt;/p&gt;
+&lt;p&gt;Add lines like this to your global or project-specific &lt;code&gt;.gdbinit&lt;/code&gt; file:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;skip -gfile bits/*.h
+skip -gfile include/c++/*
+skip -function &amp;quot;operator new&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Also add lines for any third-party libraries or fast TUs that you would like to always step-over.&lt;/p&gt;
 &lt;h3 id="why_12"&gt;Why&lt;a class="headerlink" href="#why_12" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;I often want to rapidly step through a function and step-into related code without ever stepping into core layers like the stdlib. When I am debugging my code, it is usually because I have a bug within my code, and I want to treat the stdlib and most parts of the project as a black box by default.&lt;/p&gt;
 &lt;p&gt;This may not sound like a big deal, but it can be really frustrating. For example, let's say that I want to step into a function call that takes a lot of arguments. Before actually stepping into the function call, gdb will step into each of the argument expressions. If one of those expressions calls a constructor, then gdb will step into the constructor and switch to a different file. A simple attempt to step into a function call at point can turn into dozens of step/next/finish commands spanning several files before you get where you want to go. It is often easier to just set a breakpoint on the function and continue.&lt;/p&gt;
