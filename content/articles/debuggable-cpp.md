@@ -286,7 +286,14 @@ The condition variable should be volatile so that we can safely update the varia
 ## Avoid stepping into irrelevant code
 Configure gdb to step-over the stdlib, third-party libraries, your project's utility code, and maybe all "fast" TUs.
 ### How
-Add lines like `gdb skip -gfi /usr/lib/c++` to your global or project-specific `.gdbinit` file.
+Add lines like this to your global or project-specific `.gdbinit` file:
+
+```
+skip -gfile bits/*.h
+skip -gfile include/c++/*
+skip -function "operator new"
+```
+
 Also add lines for any third-party libraries or fast TUs that you would like to always step-over.
 ### Why
 I often want to rapidly step through a function and step-into related code without ever stepping into core layers like the stdlib. When I am debugging my code, it is usually because I have a bug within my code, and I want to treat the stdlib and most parts of the project as a black box by default.
