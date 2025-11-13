@@ -4,7 +4,8 @@ These are the puzzlehunt puzzles that I have authored or co-authored so far:
 
 | Puzzle                                                                      | Hunt                                                       | Org            |
 |-----------------------------------------------------------------------------|------------------------------------------------------------|----------------|
-| [Beep Arcade][beep-arcade] [(sol)][beep-arcade-sol]                         | [Matt & Emma's Carnival Conundrum][teammate-hunt]          | Teammate       |
+| [Laser Pointers][laser-pointers] [(sol)][laser-pointers-sol]                | [Matt & Emma's Deep-Space Disaster][teammate-hunt-2025]    | Teammate       |
+| [Beep Arcade][beep-arcade] [(sol)][beep-arcade-sol]                         | [Matt & Emma's Carnival Conundrum][teammate-hunt-2021]     | Teammate       |
 | [Word Wide Web][word-wide-web] [(sol)][word-wide-web-sol]                   | [Matt & Emma's Birthday Bash][teammate-hunt-2020]          | Teammate       |
 | [DVD Collection][dvd-collection] [(sol)][dvd-collection-sol]                | [Matt & Emma's Birthday Bash][teammate-hunt-2020]          | Teammate       |
 | [Horizons][horizons] [(sol)][horizons-sol]                                  | [Castaway Hunt][castaway-hunt]                             | CMU Puzzlehunt |
@@ -12,6 +13,8 @@ These are the puzzlehunt puzzles that I have authored or co-authored so far:
 | [A Royal Mess][a-royal-mess] [(sol)][a-royal-mess-sol]                      | [CS Hunt][cs-hunt]                                         | CMU Puzzlehunt |
 | [The Cake is a Lie][the-cake-is-a-lie] [(sol)][the-cake-is-a-lie-sol]       | [Aperture Science Student Testing Initiative][portal-hunt] | CMU Puzzlehunt |
 
+[laser-pointers]: /files/puzzles/laser-pointers.pdf
+[laser-pointers-sol]: /files/puzzles/laser-pointers-sol.pdf
 [beep-arcade]: /files/puzzles/beep-arcade.html
 [beep-arcade-sol]: /files/puzzles/beep-arcade-sol.html
 [word-wide-web]: /files/puzzles/word-wide-web.pdf
@@ -29,6 +32,8 @@ These are the puzzlehunt puzzles that I have authored or co-authored so far:
 
 [teammate-hunt]: https://teammatehunt.com
 [teammate-hunt-2020]: https://2020.teammatehunt.com
+[teammate-hunt-2021]: https://2021.teammatehunt.com
+[teammate-hunt-2025]: https://2025.teammatehunt.com
 [castaway-hunt]: https://puzzlehunt.club.cc.cmu.edu/hunt/14/
 [anomaly-hunt]: https://puzzlehunt.club.cc.cmu.edu/hunt/12/
 [cs-hunt]: https://puzzlehunt.club.cc.cmu.edu/hunt/10/
