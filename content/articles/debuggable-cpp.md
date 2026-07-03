@@ -270,6 +270,8 @@ The `nop` instruction after the `int3` helps gdb understand the context of where
 
 [^int_fix]: Thanks to HN user `amluto` for suggesting the `nop` instruction [here](https://news.ycombinator.com/item?id=41104749).
 
+clang provides `__builtin_debugtrap()` as an alternative to `int3` that also works on ARM. If using a C++26 compiler, then `std::breakpoint()` is the standardized, cross-platform approach.
+
 Make sure that `breakpoint_1` has external linkage (e.g. isn't static and isn't inside of an anonymous namespace) so that you can easily enable/disable it regardless of where your debugger is sitting in the stack.
 
 ### Why
