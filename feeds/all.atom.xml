@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>David Hashe | Personal website and blog</title><link href="https://dhashe.com/" rel="alternate"></link><link href="https://dhashe.com/feeds/all.atom.xml" rel="self"></link><id>https://dhashe.com/</id><updated>2025-02-28T00:00:00-05:00</updated><entry><title>Predicting character card ink costs using linear regression in Disney Lorcana</title><link href="https://dhashe.com/predicting-character-card-ink-costs-using-linear-regression-in-disney-lorcana.html" rel="alternate"></link><published>2025-02-28T00:00:00-05:00</published><updated>2025-02-28T00:00:00-05:00</updated><author><name>David Hashe</name></author><id>tag:dhashe.com,2025-02-28:/predicting-character-card-ink-costs-using-linear-regression-in-disney-lorcana.html</id><summary type="html">&lt;style&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>David Hashe | Personal website and blog</title><link href="https://dhashe.com/" rel="alternate"/><link href="https://dhashe.com/feeds/all.atom.xml" rel="self"/><id>https://dhashe.com/</id><updated>2025-02-28T00:00:00-05:00</updated><entry><title>Predicting character card ink costs using linear regression in Disney Lorcana</title><link href="https://dhashe.com/predicting-character-card-ink-costs-using-linear-regression-in-disney-lorcana.html" rel="alternate"/><published>2025-02-28T00:00:00-05:00</published><updated>2025-02-28T00:00:00-05:00</updated><author><name>David Hashe</name></author><id>tag:dhashe.com,2025-02-28:/predicting-character-card-ink-costs-using-linear-regression-in-disney-lorcana.html</id><summary type="html">&lt;style&gt;
 figcaption {
   text-align: center;
 }
@@ -2587,7 +2587,7 @@ F-statistic: 3.042 on 1 and 272 DF,  p-value: 0.08229
 &lt;li&gt;&lt;a href="/files/lorcana-pred/lorcana_meta_cards.csv"&gt;Meta-relevant cards&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="https://github.com/dhashe/lorcana-pred"&gt;GitHub&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;&lt;em&gt;Thank you to Ansh Sancheti for providing feedback on drafts of this post. All mistakes are my own.&lt;/em&gt;&lt;/p&gt;</content><category term="Blog"></category></entry><entry><title>Responses to walking a very large poodle</title><link href="https://dhashe.com/responses-to-walking-a-very-large-poodle.html" rel="alternate"></link><published>2024-10-24T21:00:00-04:00</published><updated>2024-10-24T21:00:00-04:00</updated><author><name>David Hashe</name></author><id>tag:dhashe.com,2024-10-24:/responses-to-walking-a-very-large-poodle.html</id><summary type="html">&lt;style&gt;
+&lt;p&gt;&lt;em&gt;Thank you to Ansh Sancheti for providing feedback on drafts of this post. All mistakes are my own.&lt;/em&gt;&lt;/p&gt;</content><category term="Blog"/></entry><entry><title>Responses to walking a very large poodle</title><link href="https://dhashe.com/responses-to-walking-a-very-large-poodle.html" rel="alternate"/><published>2024-10-24T21:00:00-04:00</published><updated>2024-10-24T21:00:00-04:00</updated><author><name>David Hashe</name></author><id>tag:dhashe.com,2024-10-24:/responses-to-walking-a-very-large-poodle.html</id><summary type="html">&lt;style&gt;
 figcaption {
   text-align: center;
 }
@@ -2833,9 +2833,9 @@ img {
   &lt;figcaption&gt;&lt;em&gt;All tuckered out.&lt;/em&gt;&lt;/figcaption&gt;
 &lt;/figure&gt;
 
-&lt;p&gt;&lt;em&gt;Thank you to Veronica Lopez for many things, including providing feedback on drafts of this post. All mistakes are my own.&lt;/em&gt;&lt;/p&gt;</content><category term="Blog"></category></entry><entry><title>vidsteps</title><link href="https://dhashe.com/vidsteps.html" rel="alternate"></link><published>2024-10-12T20:00:00-04:00</published><updated>2024-10-12T20:00:00-04:00</updated><author><name>David Hashe</name></author><id>tag:dhashe.com,2024-10-12:/vidsteps.html</id><summary type="html">&lt;p&gt;I wrote a quick tool to help myself follow along to recipe videos as I cook. The idea is to divide a video into "steps" and then play the video step-by-step, looping the current step until told to advance.&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Thank you to Veronica Lopez for many things, including providing feedback on drafts of this post. All mistakes are my own.&lt;/em&gt;&lt;/p&gt;</content><category term="Blog"/></entry><entry><title>vidsteps</title><link href="https://dhashe.com/vidsteps.html" rel="alternate"/><published>2024-10-12T20:00:00-04:00</published><updated>2024-10-12T20:00:00-04:00</updated><author><name>David Hashe</name></author><id>tag:dhashe.com,2024-10-12:/vidsteps.html</id><summary type="html">&lt;p&gt;I wrote a quick tool to help myself follow along to recipe videos as I cook. The idea is to divide a video into "steps" and then play the video step-by-step, looping the current step until told to advance.&lt;/p&gt;
 &lt;p&gt;If that sounds useful to you, then check it out &lt;a href="https://github.com/dhashe/vidsteps"&gt;here …&lt;/a&gt;&lt;/p&gt;</summary><content type="html">&lt;p&gt;I wrote a quick tool to help myself follow along to recipe videos as I cook. The idea is to divide a video into "steps" and then play the video step-by-step, looping the current step until told to advance.&lt;/p&gt;
-&lt;p&gt;If that sounds useful to you, then check it out &lt;a href="https://github.com/dhashe/vidsteps"&gt;here&lt;/a&gt;!&lt;/p&gt;</content><category term="Blog"></category></entry><entry><title>How to build highly-debuggable C++ binaries</title><link href="https://dhashe.com/how-to-build-highly-debuggable-c-binaries.html" rel="alternate"></link><published>2024-07-19T09:00:00-04:00</published><updated>2024-07-19T09:00:00-04:00</updated><author><name>David Hashe</name></author><id>tag:dhashe.com,2024-07-19:/how-to-build-highly-debuggable-c-binaries.html</id><summary type="html">&lt;style&gt;
+&lt;p&gt;If that sounds useful to you, then check it out &lt;a href="https://github.com/dhashe/vidsteps"&gt;here&lt;/a&gt;!&lt;/p&gt;</content><category term="Blog"/></entry><entry><title>How to build highly-debuggable C++ binaries</title><link href="https://dhashe.com/how-to-build-highly-debuggable-c-binaries.html" rel="alternate"/><published>2024-07-19T09:00:00-04:00</published><updated>2024-07-19T09:00:00-04:00</updated><author><name>David Hashe</name></author><id>tag:dhashe.com,2024-07-19:/how-to-build-highly-debuggable-c-binaries.html</id><summary type="html">&lt;style&gt;
 code {
   white-space : pre-wrap !important;
 }
@@ -3067,6 +3067,7 @@ void func() {
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;The &lt;code&gt;nop&lt;/code&gt; instruction after the &lt;code&gt;int3&lt;/code&gt; helps gdb understand the context of where the breakpoint fired &lt;sup id="fnref:int_fix"&gt;&lt;a class="footnote-ref" href="#fn:int_fix"&gt;6&lt;/a&gt;&lt;/sup&gt; .&lt;/p&gt;
+&lt;p&gt;clang provides &lt;code&gt;__builtin_debugtrap()&lt;/code&gt; as an alternative to &lt;code&gt;int3&lt;/code&gt; that also works on ARM. If using a C++26 compiler, then &lt;code&gt;std::breakpoint()&lt;/code&gt; is the standardized, cross-platform approach.&lt;/p&gt;
 &lt;p&gt;Make sure that &lt;code&gt;breakpoint_1&lt;/code&gt; has external linkage (e.g. isn't static and isn't inside of an anonymous namespace) so that you can easily enable/disable it regardless of where your debugger is sitting in the stack.&lt;/p&gt;
 &lt;h3 id="why_11"&gt;Why&lt;a class="headerlink" href="#why_11" title="Permanent link"&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;If you create a conditional breakpoint from inside of gdb, then it will trap on every occurrence, evaluate your break condition, and continue if the break condition is not met. This can be very slow. gdb does it this way because it only requires overwriting a single byte of the binary, which it knows how to do safely.&lt;/p&gt;
@@ -3148,7 +3149,7 @@ skip -function &amp;quot;operator new&amp;quot;
 &lt;p&gt;Thanks to HN user &lt;code&gt;amluto&lt;/code&gt; for suggesting the &lt;code&gt;nop&lt;/code&gt; instruction &lt;a href="https://news.ycombinator.com/item?id=41104749"&gt;here&lt;/a&gt;.&amp;#160;&lt;a class="footnote-backref" href="#fnref:int_fix" title="Jump back to footnote 6 in the text"&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
 &lt;/li&gt;
 &lt;/ol&gt;
-&lt;/div&gt;</content><category term="Blog"></category></entry><entry><title>xargs is the inverse function of echo</title><link href="https://dhashe.com/xargs-is-the-inverse-function-of-echo.html" rel="alternate"></link><published>2024-04-12T09:00:00-04:00</published><updated>2024-04-12T09:00:00-04:00</updated><author><name>David Hashe</name></author><id>tag:dhashe.com,2024-04-12:/xargs-is-the-inverse-function-of-echo.html</id><summary type="html">&lt;style&gt;
+&lt;/div&gt;</content><category term="Blog"/></entry><entry><title>xargs is the inverse function of echo</title><link href="https://dhashe.com/xargs-is-the-inverse-function-of-echo.html" rel="alternate"/><published>2024-04-12T09:00:00-04:00</published><updated>2024-04-12T09:00:00-04:00</updated><author><name>David Hashe</name></author><id>tag:dhashe.com,2024-04-12:/xargs-is-the-inverse-function-of-echo.html</id><summary type="html">&lt;style&gt;
 code {
   white-space : pre-wrap !important;
 }
@@ -3242,4 +3243,4 @@ $&lt;span class="w"&gt; &lt;/span&gt;command_plus_args&lt;span class="w"&gt; &lt
 &lt;p&gt;Note that &lt;code&gt;$STDIN_DATA&lt;/code&gt; is the cmdline args for &lt;code&gt;echo&lt;/code&gt; but the stdin for &lt;code&gt;$CMD&lt;/code&gt;. Also note that we could have replaced echo with a &lt;a href="https://en.wikipedia.org/wiki/Here_document"&gt;heredoc&lt;/a&gt;.&amp;#160;&lt;a class="footnote-backref" href="#fnref:echo_heredocs" title="Jump back to footnote 3 in the text"&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
 &lt;/li&gt;
 &lt;/ol&gt;
-&lt;/div&gt;</content><category term="Blog"></category></entry></feed>
+&lt;/div&gt;</content><category term="Blog"/></entry></feed>

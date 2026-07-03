@@ -271,6 +271,7 @@ void func() {
 </code></pre></div>
 
 <p>The <code>nop</code> instruction after the <code>int3</code> helps gdb understand the context of where the breakpoint fired <sup id="fnref:int_fix"><a class="footnote-ref" href="#fn:int_fix">6</a></sup> .</p>
+<p>clang provides <code>__builtin_debugtrap()</code> as an alternative to <code>int3</code> that also works on ARM. If using a C++26 compiler, then <code>std::breakpoint()</code> is the standardized, cross-platform approach.</p>
 <p>Make sure that <code>breakpoint_1</code> has external linkage (e.g. isn't static and isn't inside of an anonymous namespace) so that you can easily enable/disable it regardless of where your debugger is sitting in the stack.</p>
 <h3 id="why_11">Why<a class="headerlink" href="#why_11" title="Permanent link">#</a></h3>
 <p>If you create a conditional breakpoint from inside of gdb, then it will trap on every occurrence, evaluate your break condition, and continue if the break condition is not met. This can be very slow. gdb does it this way because it only requires overwriting a single byte of the binary, which it knows how to do safely.</p>
